@@ -4,7 +4,7 @@ The commands below require companion numerical artifacts that are **not included
 
 # Reproduction guide
 
-Run commands from the repository root. Python 3.10Ã¢â‚¬â€œ3.12 is supported by the
+Run commands from the repository root. Python 3.10-3.12 is supported by the
 project metadata; the recorded Kaggle environments used Python 3.12.13. The
 complete environment records are kept with the corresponding result bundle.
 They are provenance snapshots, not a claim that one environment served every
