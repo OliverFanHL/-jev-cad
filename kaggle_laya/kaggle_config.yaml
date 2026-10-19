@@ -1,0 +1,21 @@
+# Frozen Laya/TMCAD protocol adapted to one Kaggle GPU.
+# Batch 8 x accumulation 1 preserves the local effective batch of 8.
+project_seed: 42
+base_repository: convaiinnovations/laya
+base_subfolder: typed-decisions
+base_revision: 5e7b2b1b8ca2ecdd3f2322d94069c9b6ce7e844b
+device: cuda
+epochs: 4
+batch_size: 8
+accumulation_steps: 1
+precision: fp16
+save_epoch_snapshots: true
+encoder_lr: 0.000025
+head_lr: 0.0001
+weight_decay: 0.01
+group_size: 4
+sigma_start: 0.4
+sigma_end: 0.1
+rl_weight: 1.0
+run_full_inference: true
+run_direct_choice_evaluation: true

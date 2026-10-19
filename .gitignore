@@ -1,0 +1,37 @@
+# Secrets and machine state
+.env
+.env.*
+!.env.example
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+.idea/
+.vercel/
+node_modules/
+
+# Rebuildable heavy inputs, weights, caches, and fresh outputs
+data/TMCAD/
+models/
+*.sqlite
+*.db
+*.safetensors
+*.zip
+recomputed/
+outputs/study/full/mesh/
+research_v2/expert_review_app/public/renders/
+dist/
+build/
+
+# Expanded archival copies; committed gzip files retain the source records
+outputs/**/*.csv
+outputs/**/*.jsonl
+outputs/**/*.json
+kaggle_laya/jev_tmcad_laya_ft_result/**/*.csv
+kaggle_laya/jev_tmcad_laya_ft_result/**/*.json
+kaggle_laya/jev_tmcad_laya_ft_result/**/*.jsonl
+research_v2/evaluation/**/*.csv
+research_v2/evaluation/**/*.json
+research_v2/evidence/*.csv
+research_v2/evidence/*.json
