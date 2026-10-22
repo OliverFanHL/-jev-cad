@@ -1,6 +1,6 @@
 import numpy as np
 
-from jev_tmcad.study_laya_finetune import _validation_macro_f1
+from jev_tmcad.training.laya import _validation_macro_f1
 
 
 def test_validation_uses_tokenized_choice_indices():

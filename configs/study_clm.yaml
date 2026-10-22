@@ -1,5 +1,5 @@
 # CLM extension of the frozen full study. Source paths and evaluation settings
-# match research_v2/study_analysis.yaml; CLM outputs stay in their own tree.
+# match configs/analysis.yaml; CLM outputs stay in their own tree.
 project:
   seed: 42
 study:
@@ -28,8 +28,8 @@ laya:
   subfolder: typed-decisions
   revision: null
 laya_finetune:
-  checkpoint_dir: kaggle_laya/jev_tmcad_laya_ft_result/laya_checkpoint
-  results_path: kaggle_laya/jev_tmcad_laya_ft_result/laya_results.jsonl
+  checkpoint_dir: kaggle/laya/jev_tmcad_laya_ft_result/laya_checkpoint
+  results_path: kaggle/laya/jev_tmcad_laya_ft_result/laya_results.jsonl
 clm:
   model: clm-latest
   checkpoint_path: models/clm/CLM_v0.1-8B.pt

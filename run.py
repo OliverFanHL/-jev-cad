@@ -31,8 +31,8 @@ SRC_DIR = PROJECT_ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from src.jev_tmcad.cli import build_parser  # noqa: E402
-from src.jev_tmcad.utils import setup_logging  # noqa: E402
+from jev_tmcad.cli import build_parser  # noqa: E402
+from jev_tmcad.utils import setup_logging  # noqa: E402
 
 
 def _print_quick_start(parser) -> None:

@@ -1,6 +1,6 @@
 import pandas as pd
 
-from jev_tmcad.dataset import canonical_label, select_subset
+from jev_tmcad.data.dataset import canonical_label, select_subset
 
 
 def test_class_aliases():

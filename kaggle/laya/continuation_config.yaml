@@ -1,0 +1,7 @@
+# Optional continuation after the original four-epoch run.
+run_continuation: false
+additional_epochs: 4
+start_epoch: 4
+selection_metric: validation_macro_f1
+continuation_sigma: 0.1
+retain_original_training_settings: true

@@ -1,80 +1,77 @@
-# Geometry–response fusion for mechanical CAD analysis
+# JEV-CAD
 
-Reusable source code for **Geometry–response fusion for mechanical CAD analysis
-with typed decision models**. The implementation combines deterministic CAD
-measurements, a learned local surface representation, and structured responses
-from typed decision models, with separate direct-decision, linear-probe, and
-fusion evaluation paths.
+Tools for classifying mechanical CAD parts and finding similar parts using
+geometry and responses from JEV, Laya, and CLM. This is the code for
+*Geometry–response fusion for mechanical CAD analysis with typed decision models*.
 
-**Release status: source code only.** The paired experimental outputs, cohort
-records, feature matrices, model responses, annotation records, model weights,
-and raw STEP solids are not publicly released in this repository at this time.
-The authors retain a separate local collection of saved outputs. Documentation
-and scripts specify the expected input locations; they do not imply that those
-inputs are downloadable here. No archived data DOI is claimed.
+The workflow starts with STEP files, extracts geometric measurements and surface
+features, asks the response models a shared set of questions, and compares the
+resulting representations through classification and retrieval.
 
-## Source layout
+## Getting started
 
-| Location | Responsibility |
-| --- | --- |
-| `src/jev_tmcad/`, `run.py` | Data preparation, descriptors, state construction, surface encoder, model interfaces, evaluation |
-| `configs/` | Question maps and study settings |
-| `research_v2/study_analysis.yaml` | Original downstream analysis configuration |
-| `kaggle_laya/` | Input packaging, adaptation notebooks, and output import validation |
-| `kaggle_clm/` | CLM packaging, inference notebook, and import validation |
-| `research_v2/scripts/` | Figure, rendering, and evidence postprocessors |
-| `research_v2/expert_review_app/` | Independent-rater/adjudication application source; no study data, renders, database, or tokens |
-| `scripts/` | Companion-artifact materialization, saved-result audit, optional cached-feature evaluator |
-| `tests/` | Existing implementation tests; fixtures are test examples, not experimental observations |
-
-The package contains no credentials, cached requests, partial result exports,
-superseded guide versions, synthetic expert-rating generators, temporary
-revision scripts, downloaded compilers, or manuscript submission drafts.
-
-## Install and inspect
-
-Use Python 3.10–3.12:
+Use Python 3.10–3.12. From the repository root:
 
 ```bash
 python -m pip install -e ".[dev]"
 python run.py --help
-python run.py --config configs/study_full.yaml study-experiments
+python run.py study-experiments
 python -m pytest tests -q
 ```
 
-These commands install the source, list the workflow/registered methods, and run
-implementation tests. They do not start training or send model requests.
-New JEV acquisition requires your own `TYPESAFE_API_KEY` supplied through the
-environment. `.env.example` has no credential. Optional CAD, GPU, and Laya
-stages need their declared extra dependencies and separately obtained inputs.
+`--help` lists the commands. `study-experiments` lists the available comparisons
+and the features each one uses.
 
-## Reproduction stages
+To work with your own CAD files, install the geometry dependencies and start
+with scanning and descriptor extraction:
 
-`docs/REPRODUCTION.md` describes the full workflow and its expected companion
-artifacts. The original configurations are retained for auditability. Model
-identities, question wording, class mappings, and training/readout distinctions
-are explicit in code. The ten-epoch Laya packaging helper depends on the earlier
-input packager; both are retained. Recorded environment metadata will accompany
-any later result release rather than being inferred from a fresh installation.
+```bash
+python -m pip install -e ".[geometry]"
+python run.py scan --dataset /path/to/TMCAD
+python run.py extract --workers 1
+python run.py inspect-state -n 3
+```
 
-The optional saved-feature adapter accepts a recorded surface-checkpoint identity
-after verifying the companion feature archives. The original evaluator's strict
-checkpoint-byte check remains the default for all other calls. This option does
-not assert verification of an undistributed checkpoint.
+Set `TYPESAFE_API_KEY` in your environment or a local `.env` file to use JEV.
+See [.env.example](.env.example). Laya and CLM use locally obtained model weights;
+their setup and the remaining stages are covered in the [workflow guide](docs/REPRODUCTION.md).
 
-The saved-result audit and figure builders require the separately held paired
-outputs. They cannot reproduce the manuscript's numbers from source code alone.
-Fresh raw-data execution additionally needs licensed STEP inputs, suitable
-hardware, upstream model weights, and any applicable API access.
+The repository includes the source and configurations. CAD files, trained
+weights, and saved study results are held separately.
 
-For plotting, install `requirements-figures.txt` separately. The annotation app
-requires a separately generated blinded manifest and renders; its source alone
-does not constitute completed independent assessments. The automatic
-silhouette-proxy code is named explicitly and does not generate expert ratings.
+## Finding your way around
 
-## Rights
+| Location | What you will find |
+| --- | --- |
+| [src/jev_tmcad/](src/jev_tmcad/) | The Python package: data, geometry, models, training, evaluation, and workflow commands |
+| [configs/](configs/) | Dataset settings, model questions, and run configurations |
+| [analysis/](analysis/) | Scripts for figures, comparison tables, and CAD renders |
+| [kaggle/](kaggle/) | Laya and CLM notebooks, input packaging, and result import tools |
+| [apps/expert_review/](apps/expert_review/) | Browser app for reviewing pairs of CAD parts |
+| [scripts/](scripts/) | Tools for opening saved artifact bundles and checking their results |
+| [tests/](tests/) | Tests for data handling, model responses, and evaluation |
 
-See `THIRD_PARTY_NOTICES.md`. No open-source software/data license has been
-selected on the authors' behalf. Obtain upstream dependencies, source CAD data,
-and model weights under their applicable licenses. Public source visibility
-does not grant rights to redistribute those external resources.
+For a guide to individual modules and how they connect, see the
+[code map](docs/CODE_MAP.md). The [configuration guide](configs/README.md) explains
+which YAML file to use for each workflow.
+
+## Common tasks
+
+| Task | Where to start |
+| --- | --- |
+| Run the full geometry and response pipeline | [Workflow guide](docs/REPRODUCTION.md) |
+| Add or change a model backend | [models/](src/jev_tmcad/models/) |
+| Change the questions sent to models | [questions_compact.yaml](configs/questions_compact.yaml) |
+| Add a classification or retrieval comparison | [experiments.py](src/jev_tmcad/evaluation/experiments.py) |
+| Fine-tune Laya or run CLM on Kaggle | [Kaggle guide](kaggle/README.md) |
+| Build figures from saved outputs | [Analysis guide](analysis/README.md) |
+| Set up the CAD review app | [App guide](apps/expert_review/README.md) |
+
+## Dependencies and reuse
+
+The default installation covers the command line tools and evaluation.
+Optional extras add CAD processing (`geometry`), Laya (`laya`), or both (`study`).
+Figure scripts use the packages in [requirements-figures.txt](requirements-figures.txt).
+
+See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for dependency and data
+licensing details. A project license has not yet been selected.

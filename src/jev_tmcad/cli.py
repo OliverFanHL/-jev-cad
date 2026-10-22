@@ -8,16 +8,16 @@ from pathlib import Path
 import pandas as pd
 from dotenv import load_dotenv
 
-from .classification_eval import evaluate_classification
-from .config import Config, load_questions
-from .dataset import add_stratified_splits, save_manifest, scan_tmcad, select_subset
-from .extraction import extract_dataset_descriptors
-from .jev_client import run_jev_for_dataframe
-from .qualitative import generate_qualitative_report
-from .retrieval_eval import evaluate_retrieval
-from .semantic_state import QuantileSchema, build_semantic_state, fit_quantile_schema
-from .study_cli import register_study_commands
-from .utils import setup_logging, write_json
+from jev_tmcad.evaluation.pilot_classification import evaluate_classification
+from jev_tmcad.config import Config, load_questions
+from jev_tmcad.data.dataset import add_stratified_splits, save_manifest, scan_tmcad, select_subset
+from jev_tmcad.geometry.extraction import extract_dataset_descriptors
+from jev_tmcad.models.jev import run_jev_for_dataframe
+from jev_tmcad.evaluation.qualitative import generate_qualitative_report
+from jev_tmcad.evaluation.pilot_retrieval import evaluate_retrieval
+from jev_tmcad.semantic_state import QuantileSchema, build_semantic_state, fit_quantile_schema
+from jev_tmcad.workflows.study import register_study_commands
+from jev_tmcad.utils import setup_logging, write_json
 
 LOGGER = logging.getLogger(__name__)
 
@@ -237,7 +237,7 @@ def cmd_all(args) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Encoder-free Jev experiments on TMCAD")
+    parser = argparse.ArgumentParser(description="CAD classification and retrieval with geometry and typed model responses")
     parser.add_argument("--config", default="configs/default.yaml", help="Path to YAML config")
     parser.add_argument("--log-level", default="INFO")
     sub = parser.add_subparsers(dest="command", required=True)

@@ -1,6 +1,6 @@
 import numpy as np
 
-from jev_tmcad.retrieval_eval import _metrics_for_ranking
+from jev_tmcad.evaluation.pilot_retrieval import _metrics_for_ranking
 
 
 def test_retrieval_metrics_perfect_first_hit():

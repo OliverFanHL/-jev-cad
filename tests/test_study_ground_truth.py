@@ -3,7 +3,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from jev_tmcad.study_ground_truth import finalize_annotation_files, prepare_annotation_files
+from jev_tmcad.data.annotations import finalize_annotation_files, prepare_annotation_files
 
 
 def test_blinded_two_rater_adjudication(tmp_path: Path):

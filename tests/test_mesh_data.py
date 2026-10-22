@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from jev_tmcad.mesh_data import MESH_VERSION, _file_digest, build_mesh_cache
+from jev_tmcad.data.mesh import MESH_VERSION, _file_digest, build_mesh_cache
 from jev_tmcad.utils import sha256_json
 
 

@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import pandas as pd
 
-from jev_tmcad import jev_client
+from jev_tmcad.models import jev as jev_client
 
 
 def test_csv_missing_extract_error_is_not_skipped(tmp_path, monkeypatch, caplog):

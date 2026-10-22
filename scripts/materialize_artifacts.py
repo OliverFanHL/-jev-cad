@@ -8,6 +8,8 @@ import hashlib
 import json
 from pathlib import Path
 
+from artifact_paths import artifact_path, current_path
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -15,14 +17,15 @@ def main(dataset: Path | None):
     manifest = json.loads((ROOT / "ARTIFACT_PROVENANCE.json").read_text())
     expanded = 0
     for artifact in manifest["artifacts"]:
-        source = ROOT / artifact["path"]
+        source = artifact_path(ROOT, artifact["path"])
         if source.suffix != ".gz":
             continue
         data = gzip.decompress(source.read_bytes())
         if hashlib.sha256(data).hexdigest() != artifact["uncompressed_sha256"]:
             raise ValueError("Uncompressed artifact hash mismatch: " + artifact["path"])
-        dest = ROOT / artifact["logical_path"]
+        dest = ROOT / current_path(artifact["logical_path"])
         if not dest.exists():
+            dest.parent.mkdir(parents=True, exist_ok=True)
             dest.write_bytes(data)
             expanded += 1
     if dataset:
@@ -61,7 +64,11 @@ def main(dataset: Path | None):
     proxy["selected_pairs_sha256"] = protocol["selected_pairs_sha256"]
     proxy["judgments_sha256"] = sha("outputs/study/visual_proxy_evaluation/visual_proxy_judgments.csv")
     proxy_path.write_text(json.dumps(proxy, indent=2) + "\n", encoding="utf-8")
-    app_manifest = ROOT / "research_v2/expert_review_app/data/pairs.json"
+    app_manifest = ROOT / "apps/expert_review/data/pairs.json"
+    if not app_manifest.exists():
+        # Some result bundles omit the app manifest; prepare_package.py builds it.
+        print(f"Expanded {expanded} artifacts. Prepare the app manifest before rendering.")
+        return
     pairs = json.loads(app_manifest.read_text())
     pairs["protocol_hash"] = protocol["selected_pairs_sha256"]
     app_manifest.write_text(json.dumps(pairs, separators=(",", ":")) + "\n", encoding="utf-8")

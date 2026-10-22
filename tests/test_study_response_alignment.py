@@ -9,10 +9,10 @@ from unittest.mock import patch
 
 import pandas as pd
 
-from jev_tmcad.dataset import TMCAD_CLASSES
+from jev_tmcad.data.dataset import TMCAD_CLASSES
 from jev_tmcad.semantic_state import QuantileSchema
-from jev_tmcad.study_evaluation import _backend_frame
-from jev_tmcad.laya_client import run_laya_for_dataframe
+from jev_tmcad.evaluation.classification import _backend_frame
+from jev_tmcad.models.laya import run_laya_for_dataframe
 from jev_tmcad.utils import sha256_json
 
 
@@ -43,7 +43,7 @@ class ResponseAlignmentTests(unittest.TestCase):
                 "latency_seconds": 1.0}
 
     def evaluate(self, backend, model):
-        with patch("jev_tmcad.study_evaluation.build_compact_semantic_state",
+        with patch("jev_tmcad.evaluation.classification.build_compact_semantic_state",
                    return_value=self.state):
             return _backend_frame(self.path, self.rows, self.spec, QuantileSchema({}),
                                   backend=backend, model=model, required=True,
@@ -81,7 +81,7 @@ class ResponseAlignmentTests(unittest.TestCase):
         model = "repo/subfolder@revision"
         self.save([self.record("a", model, TMCAD_CLASSES[0])])
         with patch.dict(sys.modules, {"laya": types.ModuleType("laya")}), patch(
-            "jev_tmcad.laya_client.build_compact_semantic_state", return_value=self.state
+            "jev_tmcad.models.laya.build_compact_semantic_state", return_value=self.state
         ):
             records = run_laya_for_dataframe(
                 self.rows, QuantileSchema({}), self.spec, self.path,

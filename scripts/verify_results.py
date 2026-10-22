@@ -14,8 +14,10 @@ import math
 from collections import Counter
 from pathlib import Path
 
+from artifact_paths import artifact_path
+
 ROOT = Path(__file__).resolve().parents[1]
-BASE = "research_v2/evaluation/classification"
+BASE = "analysis/evaluation/classification"
 CLM = "outputs/study/clm/kaggle_import/evaluation/classification"
 CLM_METHODS = ("clm_direct_choice", "clm_choice_probabilities", "clm_geometry_questions",
                "clm_all_questions", "geometry_plus_clm_choice_probabilities",
@@ -23,10 +25,10 @@ CLM_METHODS = ("clm_direct_choice", "clm_choice_probabilities", "clm_geometry_qu
 
 
 def read_bytes(name: str) -> bytes:
-    p = ROOT / name
+    p = artifact_path(ROOT, name)
     if p.is_file():
         return p.read_bytes()
-    return gzip.decompress(Path(str(p) + ".gz").read_bytes())
+    return gzip.decompress(artifact_path(ROOT, name + ".gz").read_bytes())
 
 
 def read_json(name: str):
@@ -70,7 +72,7 @@ def classification(rows: list[dict], labels: list[str]) -> dict:
 def verify(write_outputs: bool = False) -> dict:
     manifest = read_json("ARTIFACT_PROVENANCE.json")
     for artifact in manifest["artifacts"]:
-        data = (ROOT / artifact["path"]).read_bytes()
+        data = artifact_path(ROOT, artifact["path"]).read_bytes()
         require(hashlib.sha256(data).hexdigest() == artifact["sha256"], "Artifact hash mismatch: " + artifact["path"])
     cohort = read_csv("outputs/study/full/cohort.csv")
     by_id = {r["sample_id"]: r for r in cohort}

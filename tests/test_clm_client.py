@@ -8,7 +8,7 @@ import types
 import pandas as pd
 import pytest
 
-from jev_tmcad.clm_client import run_clm_for_dataframe
+from jev_tmcad.models.clm import run_clm_for_dataframe
 from jev_tmcad.semantic_state import QuantileSchema
 
 
@@ -51,7 +51,7 @@ def test_clm_records_are_per_sample_and_resume_with_a_pinned_head(tmp_path, monk
     embedder.Embedder = FakeEmbedder
     monkeypatch.setitem(sys.modules, "clm", package)
     monkeypatch.setitem(sys.modules, "clm.embedder", embedder)
-    monkeypatch.setattr("jev_tmcad.clm_client.version", lambda name: "0.1.0")
+    monkeypatch.setattr("jev_tmcad.models.clm.version", lambda name: "0.1.0")
     kwargs = {"checkpoint": checkpoint, "state_variant": "compact"}
     preview = run_clm_for_dataframe(rows, QuantileSchema({}), spec, output,
                                     dry_run=True, **kwargs)

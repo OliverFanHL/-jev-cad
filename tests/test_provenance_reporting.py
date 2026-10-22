@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 
 from jev_tmcad.provenance import class_label_mapping, with_source_labels
-from jev_tmcad.reporting import prediction_frame, save_confusion
+from jev_tmcad.evaluation.reporting import prediction_frame, save_confusion
 
 
 def test_source_folder_name_survives_canonical_encoding_and_plot(tmp_path):

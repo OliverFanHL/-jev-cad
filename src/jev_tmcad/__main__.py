@@ -1,3 +1,3 @@
-from .cli import main
+from jev_tmcad.cli import main
 
 main()

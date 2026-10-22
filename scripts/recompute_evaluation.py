@@ -19,8 +19,8 @@ sys.path.insert(0, str(ROOT / "src"))
 def main(task: str, experiment: str | None):
     import pandas as pd
     import yaml
-    from jev_tmcad.study_evaluation import prepare_features, evaluate_classification
-    from jev_tmcad.study_retrieval import evaluate_retrieval
+    from jev_tmcad.evaluation.classification import prepare_features, evaluate_classification
+    from jev_tmcad.evaluation.retrieval import evaluate_retrieval
     from verify_results import verify
 
     os.chdir(ROOT)
@@ -31,14 +31,14 @@ def main(task: str, experiment: str | None):
     questions = yaml.safe_load(Path("configs/questions_compact.yaml").read_text(encoding="utf-8"))
     paths = {"jev": Path("outputs/study/full/jev_results.jsonl"),
              "laya": Path("outputs/study/full/laya_results.jsonl"),
-             "laya_ft": Path("kaggle_laya/jev_tmcad_laya_ft_result/laya_results.jsonl"),
+             "laya_ft": Path("kaggle/laya/jev_tmcad_laya_ft_result/laya_results.jsonl"),
              "clm": Path("outputs/study/clm/kaggle_import/clm_results.jsonl")}
     def first(name):
         with paths[name].open(encoding="utf-8") as h:
             return json.loads(next(h))
     extra = {}
     if task == "classification":
-        ft_meta = json.loads(Path("kaggle_laya/jev_tmcad_laya_ft_result/laya_checkpoint/study_metadata.json").read_text())
+        ft_meta = json.loads(Path("kaggle/laya/jev_tmcad_laya_ft_result/laya_checkpoint/study_metadata.json").read_text())
         ft_model = "laya-ft:" + ft_meta["checkpoint_sha256"]
         if first("laya_ft")["model"] != ft_model:
             raise ValueError("Adapted response model differs from recorded selected checkpoint identity")

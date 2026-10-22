@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from jev_tmcad.study_retrieval import load_judgments
+from jev_tmcad.evaluation.retrieval import load_judgments
 
 
 class JudgmentLoadingTests(unittest.TestCase):

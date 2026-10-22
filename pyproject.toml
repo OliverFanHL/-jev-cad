@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "jev-tmcad"
 version = "0.1.0"
-description = "Matched CAD geometry and semantic decision experiments on TMCAD"
+description = "Geometry and typed model responses for mechanical CAD classification and retrieval"
 readme = "README.md"
 requires-python = ">=3.10,<3.13"
 dependencies = [

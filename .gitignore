@@ -13,14 +13,14 @@ node_modules/
 
 # Rebuildable heavy inputs, weights, caches, and fresh outputs
 data/TMCAD/
-models/
+/models/
 *.sqlite
 *.db
 *.safetensors
 *.zip
 recomputed/
 outputs/study/full/mesh/
-research_v2/expert_review_app/public/renders/
+apps/expert_review/public/renders/
 dist/
 build/
 
@@ -28,10 +28,17 @@ build/
 outputs/**/*.csv
 outputs/**/*.jsonl
 outputs/**/*.json
-kaggle_laya/jev_tmcad_laya_ft_result/**/*.csv
-kaggle_laya/jev_tmcad_laya_ft_result/**/*.json
-kaggle_laya/jev_tmcad_laya_ft_result/**/*.jsonl
-research_v2/evaluation/**/*.csv
-research_v2/evaluation/**/*.json
-research_v2/evidence/*.csv
-research_v2/evidence/*.json
+kaggle/laya/jev_tmcad_laya_ft_result/**/*.csv
+kaggle/laya/jev_tmcad_laya_ft_result/**/*.json
+kaggle/laya/jev_tmcad_laya_ft_result/**/*.jsonl
+analysis/evaluation/**/*.csv
+analysis/evaluation/**/*.json
+analysis/evidence/*.csv
+analysis/evidence/*.json
+
+# Generated analysis, app, and notebook files
+analysis/figures/
+apps/expert_review/data/
+apps/expert_review/render_failures.json
+kaggle/*/upload/
+kaggle/laya/jev_tmcad_laya_ft_result/

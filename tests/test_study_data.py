@@ -1,7 +1,7 @@
 import pandas as pd
 
 from jev_tmcad.semantic_state import QuantileSchema, build_compact_semantic_state
-from jev_tmcad.study_data import cohort_hash, create_cohort
+from jev_tmcad.data.cohort import cohort_hash, create_cohort
 
 
 def test_compact_state_excludes_identity_and_label():

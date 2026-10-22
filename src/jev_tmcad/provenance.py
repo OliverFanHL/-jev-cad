@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import pandas as pd
 
-from .dataset import canonical_label
+from jev_tmcad.data.dataset import canonical_label
 
 
 def with_source_labels(frame: pd.DataFrame) -> pd.DataFrame:
