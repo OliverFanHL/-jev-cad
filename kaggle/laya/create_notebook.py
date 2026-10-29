@@ -19,11 +19,7 @@ def code(source: str) -> dict:
 cells = [
     markdown("""# TMCAD fine-tuning of Laya on Kaggle
 
-This notebook uses the frozen full-study data, the same class Choice question, and the same train/calibration/validation split as the local study. It changes only execution settings for a single Kaggle GPU: FP16 and a physical batch of 8 replace FP32 and batch 2 with four accumulation steps. The effective batch remains 8. Test labels are never used for training or checkpoint/temperature selection. The test report is exploratory because earlier local results already exposed this split.
-
-**Before Run All:** Upload the **corrected v2** `jev_tmcad_laya_finetune_v2.zip` as a **private Kaggle Dataset**, attach it under *Add Input*, choose a GPU accelerator, and enable Internet for the pinned Laya package and checkpoint download. Remove the older input Dataset version from this notebook. No STEP files, API keys, or manual path edits are required. Kaggle saves files written to `/kaggle/working` with the notebook version. The code uses one GPU even if the selected accelerator exposes two.
-
-The input bundle contains prepared train/calibration/validation JSONL and all-sample descriptor-derived inference states. The output folder and ZIP contain epoch checkpoints, a Laya-loadable selected model, training history, per-sample inference records, direct Choice metrics/predictions/confusion tables, configs, and provenance hashes. The complete descriptor/geometry/JEV/Laya comparison remains a local `study-evaluate` step after download.
+This notebook adapts Laya on the prepared CAD states using FP16 and an effective batch of eight. Training fits Choice targets, validation macro F1 selects the checkpoint, and a separate training partition calibrates the Choice temperature.
 """),
     code("""from pathlib import Path
 import json, sys, zipfile, subprocess
@@ -173,9 +169,9 @@ print('Output folder:', output)
 """),
     markdown("""## Optional convergence trial: epochs 5–8
 
-The recorded validation macro F1 increased at all four original epochs (0.736, 0.810, 0.842, 0.870), so the four-epoch limit does not establish a plateau. This optional cell starts from the validated epoch-04 **model weights** and runs four more epochs using the same 6,181 training rows, 677 train-only calibration rows, 980 validation rows, FP16, physical batch 8, accumulation 1 (effective batch 8), learning rates, weight decay, and Choice CE + RL objective. The original RL noise schedule ended at 0.1; the continuation holds that endpoint. A fresh AdamW optimizer, loss scaler, and RNG state are unavoidable because the original snapshots saved weights only. This is a warm-start continuation, **not an exact uninterrupted eight-epoch run**.
+Start from the saved epoch-four model weights and run four additional epochs with the prepared fitting, calibration, and validation partitions. The continuation uses a fresh optimizer, loss scaler, and random state, and holds the RL noise at 0.1.
 
-Set `continuation_config['run_continuation'] = True` in the next cell after the original run is complete. A separate `continuation/` directory preserves every original result. All four new epochs are validated. The best epoch across epochs 1–8 is selected by validation macro F1. Test predictions are generated **once**, after selection, only if a new epoch beats epoch 4. Test results remain exploratory because this test set has already been inspected. Do not change accumulation alone: doing so with physical batch 8 changes the effective batch and is a different experiment.
+Set `continuation_config['run_continuation'] = True` after the initial run completes. Outputs go under `continuation/`. Validation macro F1 selects the best checkpoint across the initial and continued epochs, followed by test inference for an improved checkpoint.
 """),
     code("""import yaml
 continuation_config = yaml.safe_load(""" + repr((HERE / "continuation_config.yaml").read_text(encoding="utf-8")) + """)
@@ -230,10 +226,10 @@ print(continuation_config)
         extended_metrics = evaluate_finetuned_laya_choice(bundle / 'data/inference_states.jsonl',
                         extended_results, trial / 'direct_choice_evaluation')['methods']
     else:
-        extended_metrics = None  # Original checkpoint wins on validation; do not inspect a worse test model.
+        extended_metrics = None  # Retain the validation-selected original checkpoint.
     comparison = {'selection': selection, 'original_direct_choice': baseline_metrics,
                   'selected_continuation_direct_choice': extended_metrics,
-                  'interpretation': 'Test is exploratory and was evaluated only after validation selection.'}
+                  'interpretation': 'Test inference follows validation checkpoint selection.'}
     (trial / 'comparison.json').write_text(json.dumps(comparison, indent=2), encoding='utf-8')
     with zipfile.ZipFile('/kaggle/working/jev_tmcad_laya_continuation_results.zip', 'w',
                          compression=zipfile.ZIP_STORED, allowZip64=True) as archive:

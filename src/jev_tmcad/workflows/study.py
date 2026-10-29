@@ -17,7 +17,7 @@ from jev_tmcad.data.annotations import prepare_annotation_files, finalize_annota
 from jev_tmcad.training.laya import prepare_finetune_data, train_laya_finetune, run_finetuned_laya
 from jev_tmcad.data.mesh import build_mesh_cache, load_mesh_manifest
 from jev_tmcad.semantic_state import QuantileSchema
-from jev_tmcad.evaluation.audit import audit_exact_duplicates
+from jev_tmcad.evaluation.audit import audit_exact_duplicates, exclude_label_conflicts
 from jev_tmcad.data.cohort import create_cohort, load_cohort, valid_descriptors, cohort_hash
 from jev_tmcad.evaluation.classification import evaluate_classification, prepare_features
 from jev_tmcad.evaluation.experiments import experiment_catalog
@@ -90,7 +90,9 @@ def cmd_geometry_train(args):
                             batch_size=int(cfg.get("geometry.batch_size", 16)),
                             learning_rate=float(cfg.get("geometry.learning_rate", 0.001)),
                             weight_decay=float(cfg.get("geometry.weight_decay", 0.0001)),
-                            embedding_dim=int(cfg.get("geometry.embedding_dim", 128)),
+                            embedding_dim=int(cfg.get("geometry.embedding_dim", 32)),
+                            edge_channels=tuple(cfg.get("geometry.edge_channels", [32, 64])),
+                            projection_dim=int(cfg.get("geometry.projection_dim", 64)),
                             patience=int(cfg.get("geometry.patience", 12)),
                             cache_in_memory=bool(cfg.get("geometry.cache_in_memory", False)))
     print(f"Training: {result['completed_epochs']}/{result['configured_epochs']} epochs; "
@@ -217,6 +219,11 @@ def _features(cfg, path):
                                 laya_ft_path=ft_path, laya_ft_model=ft_model,
                                 clm_path=clm_path, clm_model=cfg.get("clm.model", "clm-latest"),
                                 clm_checkpoint_sha256=clm_hash)
+    if cfg.get("prompting.output_dir"):
+        from jev_tmcad.workflows.prompting import requests_from_config, prompt_feature_frame
+        prompted = prompt_feature_frame(requests_from_config(cfg),
+                                         read_jsonl(path("prompting.output_dir") / "responses.jsonl"))
+        features = features.merge(prompted, on="sample_id", validate="one_to_one")
     return cohort, features
 
 
@@ -334,7 +341,12 @@ def cmd_study_evaluate(args):
     features[alignment_cols].to_csv(out / "semantic_response_alignment.csv", index=False)
     classification = None
     if domain != "retrieval":
-        classification = evaluate_classification(features, out / "classification",
+        readout_features = features
+        if cfg.get("classification.exclude_conflicting_labels", False):
+            audit_path = path("study.duplicate_audit_path") if cfg.get("study.duplicate_audit_path") else path("study.evaluation_dir") / "duplicate_audit.json"
+            readout_features, excluded = exclude_label_conflicts(features, json.loads(audit_path.read_text(encoding="utf-8")))
+            excluded.to_csv(out / "excluded_label_conflicts.csv", index=False)
+        classification = evaluate_classification(readout_features, out / "classification",
                                                   c_grid=[float(x) for x in cfg.get("classification.c_grid", [0.01, 0.1, 1, 10])],
                                                   only=method)
     retrieval = None

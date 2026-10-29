@@ -143,11 +143,7 @@ def build_semantic_state(
     include_numeric_context: bool = True,
     include_profile_arrays: bool = True,
 ) -> dict[str, Any]:
-    """Build a label-free Jev state from deterministic CAD descriptors.
-
-    IMPORTANT: This function deliberately excludes sample_id, path, filename, folder,
-    class label, and split. Ground-truth metadata must never appear in the model state.
-    """
+    """Build geometric categories, numeric context, and optional profile arrays."""
     plane = float(row.get("face_area_frac_plane", 0.0))
     cylinder = float(row.get("face_area_frac_cylinder", 0.0))
     cone = float(row.get("face_area_frac_cone", 0.0))
@@ -235,23 +231,34 @@ def build_semantic_state(
     return state
 
 
+COMPACT_FIELDS = {
+    "extent_small_large": "dim_small_large_ratio",
+    "extent_mid_large": "dim_mid_large_ratio",
+    "fill": "bbox_fill_ratio",
+    "face_count": "face_count",
+    "solid_count": "solid_count",
+    "plane_area": "face_area_frac_plane",
+    "cylinder_area": "face_area_frac_cylinder",
+    "circle_edge": "edge_length_frac_circle",
+    "rotation_symmetry": "best_rotational_symmetry",
+    "periodicity_strength": "best_axis_periodicity_strength",
+    "periodicity_order": "best_axis_periodicity_order",
+    "axial_variation": "best_axis_axial_variation",
+    "end_asymmetry": "best_axis_end_asymmetry",
+    "axis_elongation": "best_axis_elongation",
+}
+
+
+def compact_numeric_frame(frame: pd.DataFrame) -> pd.DataFrame:
+    """The 14 rounded measurements shared by prompts and compact-state probes."""
+    return pd.DataFrame({
+        f"compact__{name}": frame[column].map(lambda value: round(float(value), 3))
+        if column in frame else 0.0
+        for name, column in COMPACT_FIELDS.items()
+    }, index=frame.index)
+
+
 def build_compact_semantic_state(row: pd.Series, schema: QuantileSchema, **_: Any) -> dict[str, Any]:
-    """Short, label-free evidence for bounded-context typed-decision models."""
-    fields = {
-        "extent_small_large": "dim_small_large_ratio",
-        "extent_mid_large": "dim_mid_large_ratio",
-        "fill": "bbox_fill_ratio",
-        "face_count": "face_count",
-        "solid_count": "solid_count",
-        "plane_area": "face_area_frac_plane",
-        "cylinder_area": "face_area_frac_cylinder",
-        "circle_edge": "edge_length_frac_circle",
-        "rotation_symmetry": "best_rotational_symmetry",
-        "periodicity_strength": "best_axis_periodicity_strength",
-        "periodicity_order": "best_axis_periodicity_order",
-        "axial_variation": "best_axis_axial_variation",
-        "end_asymmetry": "best_axis_end_asymmetry",
-        "axis_elongation": "best_axis_elongation",
-    }
-    facts = {name: round(float(row.get(column, 0.0)), 3) for name, column in fields.items()}
+    """Short geometric state for typed decision models."""
+    facts = {name: round(float(row.get(column, 0.0)), 3) for name, column in COMPACT_FIELDS.items()}
     return {"object": "unlabeled mechanical CAD part", "geometry": facts}

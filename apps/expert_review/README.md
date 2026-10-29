@@ -22,10 +22,7 @@ This reads `outputs/study/full/annotations/`, writes the blinded manifest to
 and Pillow. Use `--limit 3` for a small rendering check; omit `--limit` to build
 the complete package.
 
-If starting with a saved artifact bundle, expand it first and update its CAD
-paths with `python scripts/materialize_artifacts.py --dataset /path/to/TMCAD`.
-The repository includes the app source; manifests, renders, and ratings are
-generated locally.
+Manifests, renders, and ratings are generated locally.
 
 ## Set up the app
 
@@ -37,9 +34,8 @@ npm test
 npm run check
 ```
 
-`npm test` checks the grading and export logic against the prepared manifest.
-`npm run check` also verifies the complete render package and its hashes. The
-current checks use the recorded study selection of 6,645 pairs and 2,643 parts.
+`npm test` checks grading and export logic using synthetic pairs.
+`npm run check` verifies your prepared manifest, render coverage, and hashes.
 
 Use [.env.example](.env.example) to set `DATABASE_URL` and the four private tokens
 in your deployment environment. Initialize the database with:

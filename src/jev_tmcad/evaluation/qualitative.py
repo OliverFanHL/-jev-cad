@@ -105,7 +105,7 @@ def generate_qualitative_report(
         "<style>body{font-family:Arial,sans-serif;margin:28px;} table{border-collapse:collapse;margin-bottom:28px;} td,th{border:1px solid #bbb;padding:7px;vertical-align:top;} .ok{background:#eef8ee}.bad{background:#fdeeee}.small{font-size:12px;color:#444}</style>",
         "</head><body>",
         "<h1>Jev-TMCAD qualitative report</h1>",
-        "<p>All predictions were made from label-free deterministic CAD descriptors. Folder names, filenames, paths, sample IDs, and ground-truth classes are not included in the Jev state.</p>",
+        "<p>Predictions use deterministic geometric descriptors of each CAD part.</p>",
     ]
 
     # Classification examples.

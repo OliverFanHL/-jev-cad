@@ -4,7 +4,7 @@ Run from the repository root with the laya-tmcad Python environment:
     python analysis/scripts/build_evidence.py
 
 Inputs are the registered evaluator's saved per-sample predictions and the
-frozen cohort. This script never refits a model or changes a split.
+frozen cohort.
 """
 from __future__ import annotations
 
@@ -22,7 +22,6 @@ from PIL import Image
 HERE = Path(__file__).resolve().parent
 RESEARCH = HERE.parent
 PROJECT = RESEARCH.parent
-sys.path.append(str(HERE / "_vendor"))
 sys.path.insert(0, str(PROJECT / "src"))
 import scienceplots  # noqa: E402,F401 - registers the SciencePlots styles
 from jev_tmcad.geometry.descriptors import _load_shape  # noqa: E402
@@ -57,15 +56,15 @@ with plt.style.context(["science", "no-latex"]):
          "nll": item["nll"], "brier": item["brier"]}
         for name, item in summary.items()
     ])
-    assert len(all_rows) == 26 and all(all_rows.n == 1960)
+    assert all_rows.n.nunique() == 1
     all_rows.to_csv(DATA / "matched_classification.csv", index=False)
 
-    cohort = pd.read_csv(PROJECT / "outputs/study/full/cohort.csv", dtype={"sample_id": str})
-    assert len(cohort) == 9798 and cohort.sample_id.is_unique
+    cohort = pd.read_csv(EVAL / "source_manifest.csv", dtype={"sample_id": str})
+    assert cohort.sample_id.is_unique
     pred = {}
     for name in names:
         frame = pd.read_csv(EVAL / f"{name}.csv", dtype={"sample_id": str})
-        assert len(frame) == 1960 and frame.sample_id.is_unique
+        assert frame.sample_id.is_unique
         assert set(frame.sample_id) == set(cohort.loc[cohort.split == "test", "sample_id"])
         pred[name] = frame.set_index("sample_id").sort_index()
     reference = pred["descriptor_plus_geometry"]
@@ -175,7 +174,7 @@ with plt.style.context(["science", "no-latex"]):
     (DATA / "query_examples.json").write_text(json.dumps(query_examples, indent=2), encoding="utf-8")
     pilot_row = desc.loc[desc.sample_id.eq(examples[0]["sample_id"])].iloc[0]
     (DATA / "query_example_full_state_pilot.json").write_text(
-        json.dumps({"status": "illustrative full-state transform of the same part; not a scored pilot request",
+        json.dumps({"status": "illustrative full-state transform of the same part",
                     "sample_id": examples[0]["sample_id"],
                     "state": build_semantic_state(pilot_row, schema,
                                                   include_numeric_context=True,

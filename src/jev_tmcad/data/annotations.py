@@ -1,6 +1,4 @@
-"""Blinded, reproducible expert grading of CAD retrieval pairs.
-
-Folder labels and model similarities never become relevance ground truth.
+"""Blinded expert grading and adjudication of CAD retrieval pairs.
 """
 from __future__ import annotations
 

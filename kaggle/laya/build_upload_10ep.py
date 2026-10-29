@@ -1,9 +1,4 @@
-"""Package the frozen study for a fresh ten-epoch Kaggle Laya run.
-
-The train/calibration/validation and inference states are copied byte for byte
-from the verified v2 bundle. Only the epoch setting, current package source,
-and manifest are updated. The existing four-epoch bundle is not modified.
-"""
+"""Package the prepared data and current source for ten-epoch Laya adaptation."""
 from __future__ import annotations
 
 import hashlib

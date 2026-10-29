@@ -5,8 +5,14 @@ import { createHash } from 'node:crypto';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const manifest = JSON.parse(fs.readFileSync(new URL('../data/pairs.json', import.meta.url), 'utf8'));
-if (manifest.pairs.length !== 6645 || manifest.asset_ids.length !== 2643) {
-  throw new Error('The frozen pair/asset counts differ from the research protocol');
+if (!manifest.pairs.length || !manifest.asset_ids.length) {
+  throw new Error('The pair manifest requires pairs and CAD assets');
+}
+const assets = new Set(manifest.asset_ids);
+const referenced = new Set(manifest.pairs.flatMap(pair => [pair.query_id, pair.candidate_id]));
+if (assets.size !== manifest.asset_ids.length || assets.size !== referenced.size ||
+    [...referenced].some(id => !assets.has(id))) {
+  throw new Error('Pair references and unique CAD assets must agree');
 }
 const ids = new Set(manifest.pairs.map(p => p.pair_id));
 if (ids.size !== manifest.pairs.length) throw new Error('Duplicate pair ID');

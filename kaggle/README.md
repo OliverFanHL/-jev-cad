@@ -1,6 +1,6 @@
 # Running Laya and CLM on Kaggle
 
-Each model has a notebook, an input packager, and a result importer. Packaging
+Each model has a notebook builder, an input packager, and a result importer. Packaging
 runs locally; upload the resulting ZIP to a private Kaggle Dataset and attach
 it to the notebook. Download the completed output ZIP and import it locally.
 
@@ -15,6 +15,7 @@ Prepare the training examples and build the four-epoch input bundle:
 ```bash
 python run.py --config configs/study_full_ft.yaml study-laya-ft-prepare
 python kaggle/laya/build_upload.py
+python kaggle/laya/create_notebook.py
 ```
 
 Open `laya/laya_finetune_kaggle.ipynb` on Kaggle, attach the ZIP from
@@ -24,6 +25,7 @@ For the ten-epoch run, build the base bundle above first, then:
 
 ```bash
 python kaggle/laya/build_upload_10ep.py
+python kaggle/laya/create_notebook_10ep.py
 ```
 
 Use `laya/laya_finetune_10epoch_kaggle.ipynb` with that ZIP. It uses the same
@@ -45,6 +47,7 @@ With the baseline features and evaluation outputs available:
 
 ```bash
 python kaggle/clm/build_upload.py
+python kaggle/clm/create_notebook.py
 ```
 
 Use `clm/clm_tmcad_kaggle.ipynb` with the resulting ZIP from `clm/upload/`.

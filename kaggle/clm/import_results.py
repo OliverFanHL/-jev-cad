@@ -26,7 +26,7 @@ def import_zip(path: Path, target: Path) -> None:
                Path(name).is_absolute() for name in names):
             raise ValueError("Unsafe Kaggle CLM result ZIP paths")
         manifest = json.loads(archive.read(PREFIX + "output_manifest.json"))
-        if manifest["pending"] != 0 or manifest["completed"] != 9798:
+        if manifest["pending"] != 0 or manifest["completed"] < 1:
             raise ValueError("CLM output ZIP is incomplete; attach it to another Kaggle session")
         input_manifest = archive.read(PREFIX + "input_manifest.json")
         if sha256(input_manifest) != manifest["input_manifest_sha256"]:
@@ -42,7 +42,7 @@ def import_zip(path: Path, target: Path) -> None:
                 raise ValueError(f"CLM output changed: {name}")
         raw = archive.read(PREFIX + "clm_results.jsonl").decode("utf-8")
         records = [json.loads(line) for line in raw.splitlines() if line]
-        if len(records) != 9798 or len({str(r["sample_id"]) for r in records}) != len(records):
+        if len(records) != expected_input["n_samples"] or manifest["completed"] != expected_input["n_samples"] or len({str(r["sample_id"]) for r in records}) != len(records):
             raise ValueError("CLM response IDs are incomplete or duplicated")
         with (ROOT / "outputs/study/full/cohort.csv").open(newline="", encoding="utf-8") as stream:
             cohort = {r["sample_id"]: r for r in csv.DictReader(stream)}

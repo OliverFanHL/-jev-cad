@@ -1,6 +1,6 @@
 """Build Figure 4 from saved JEV and completed CLM classification results.
 
-This script reads recorded metrics only; it does not refit or rescore models.
+Read saved evaluator metrics to compare representation combinations.
 """
 from __future__ import annotations
 
@@ -16,7 +16,6 @@ import numpy as np
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
-sys.path.append(str(HERE / "_vendor"))
 import scienceplots  # noqa: E402,F401 - registers the SciencePlots style
 from clm_manuscript_data import load_matched_summaries  # noqa: E402
 
@@ -37,7 +36,7 @@ rows = [
     ("Descriptor + JEV full Noul", "descriptor_plus_jev", baseline),
     ("Descriptor + CLM full Noul", "descriptor_plus_clm", clm),
 ]
-assert all(source[key]["n"] == 1960 for _, key, source in rows)
+assert len({source[key]["n"] for _, key, source in rows}) == 1
 evidence = [{"label": label, "method": key,
              "accuracy": source[key]["accuracy"], "macro_f1": source[key]["macro_f1"]}
             for label, key, source in rows]

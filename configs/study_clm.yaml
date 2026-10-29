@@ -3,6 +3,7 @@
 project:
   seed: 42
 study:
+  duplicate_audit_path: outputs/study/full/evaluation/duplicate_audit.json
   descriptor_path: outputs/descriptors/tmcad_descriptors.csv
   schema_path: outputs/descriptors/quantile_schema.json
   questions_path: configs/questions_compact.yaml
@@ -43,6 +44,7 @@ clm:
   timeout_seconds: 300
   retry_attempts: 3
 classification:
+  exclude_conflicting_labels: true
   c_grid: [0.01, 0.1, 1.0, 10.0]
 retrieval:
   query_scope: preselected

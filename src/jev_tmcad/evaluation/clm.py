@@ -1,9 +1,4 @@
-"""Assemble CLM-only matched features for remote evaluation.
-
-Uses the same frozen cohort, descriptor/geometry columns, semantic validator,
-and registered evaluators as the local full-study matrix. No baseline inference
-files or Windows-specific checkpoint paths are required on Kaggle.
-"""
+"""Assemble CLM features for the common classification and retrieval evaluators."""
 from __future__ import annotations
 
 import json
@@ -14,7 +9,7 @@ import pandas as pd
 from jev_tmcad.geometry.descriptors import numeric_feature_columns
 from jev_tmcad.models.clm import file_sha256
 from jev_tmcad.provenance import with_source_labels
-from jev_tmcad.semantic_state import QuantileSchema
+from jev_tmcad.semantic_state import QuantileSchema, compact_numeric_frame
 from jev_tmcad.data.cohort import check_cohort_hash, valid_descriptors
 from jev_tmcad.evaluation.classification import _backend_frame
 
@@ -39,6 +34,7 @@ def prepare_clm_features(cohort: pd.DataFrame, descriptor_path: Path,
                if pd.api.types.is_numeric_dtype(desc[c])]
     frame = cohort.merge(desc[["sample_id", *numeric]], on="sample_id", validate="one_to_one")
     frame = frame.rename(columns={c: f"desc__{c}" for c in numeric})
+    frame = pd.concat([frame, compact_numeric_frame(state_rows).reset_index(drop=True)], axis=1)
     check_cohort_hash(cohort, geometry_path.with_suffix(".meta.json"))
     geometry_meta = json.loads(geometry_path.with_suffix(".meta.json").read_text(encoding="utf-8"))
     if file_sha256(geometry_checkpoint) != geometry_meta["checkpoint_sha256"]:

@@ -1,4 +1,4 @@
-"""An annotation template must never be mistaken for graded retrieval truth."""
+"""Grade completeness, integer ranges, and sample identity validation."""
 import tempfile
 import unittest
 from pathlib import Path

@@ -1,4 +1,5 @@
-import { authenticatedRole, disagreementIds, exportCsv, manifest, roles, sendJson } from '../lib/core.js';
+import { authenticatedRole, disagreementIds, exportCsv, roles, sendJson } from '../lib/core.js';
+import { manifest } from '../lib/manifest.js';
 import { database, ratingsFor } from '../lib/db.js';
 
 export default async function handler(req, res) {
@@ -22,7 +23,7 @@ export default async function handler(req, res) {
       if (a.size !== manifest.pairs.length || b.size !== manifest.pairs.length) {
         return sendJson(res, 409, { error: 'Both independent rating files must be complete first' });
       }
-      const disagreements = disagreementIds(a, b);
+      const disagreements = disagreementIds(a, b, manifest.pairs);
       const unjudged = [...disagreements].filter(id => !ratings.has(id));
       if (unjudged.length) return sendJson(res, 409, { error: `${unjudged.length} disagreements remain` });
       exportRatings = new Map([...ratings].filter(([id]) => disagreements.has(id)));
@@ -34,6 +35,6 @@ export default async function handler(req, res) {
     return res.status(200).send(csv);
   } catch (error) {
     console.error('Export failed', error);
-    return sendJson(res, 503, { error: 'Export unavailable. Saved grades have not changed.' });
+    return sendJson(res, 503, { error: 'Export is unavailable. Try again shortly.' });
   }
 }

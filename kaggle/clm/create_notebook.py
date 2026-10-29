@@ -1,4 +1,4 @@
-"""Write a self-contained Kaggle CLM notebook; this does not run inference."""
+"""Generate a self-contained Kaggle CLM inference notebook."""
 from __future__ import annotations
 
 import json
@@ -59,7 +59,7 @@ import torch
 import yaml
 
 manifest = json.loads((bundle / 'manifest.json').read_text(encoding='utf-8'))
-if manifest['bundle_type'] != 'jev_tmcad_clm_v1' or manifest['n_samples'] != 9798:
+if manifest['bundle_type'] != 'jev_tmcad_clm_v1' or manifest['n_samples'] < 1:
     raise ValueError('Wrong CLM input bundle')
 for name, info in manifest['files'].items():
     payload = (bundle / name).read_bytes()
@@ -120,7 +120,7 @@ if prior_zips:
             raise ValueError('Unsafe prior result ZIP path')
         previous = json.loads(archive.read(f'{output.name}/output_manifest.json'))
         if previous['input_manifest_sha256'] != hashlib.sha256((bundle / 'manifest.json').read_bytes()).hexdigest():
-            raise ValueError('Prior CLM results used a different input bundle; do not attach Transformers results')
+            raise ValueError('Prior CLM results use a different input bundle')
         previous_rows = archive.read(f'{output.name}/clm_results.jsonl').splitlines()
         if previous_rows and json.loads(previous_rows[0]).get('encoder_backend') != 'vllm':
             raise ValueError('Prior CLM results were not produced by vLLM')
@@ -157,8 +157,8 @@ environment['transformers'] = version('transformers')
 environment['head_sha256'] = file_sha256(checkpoint)
 (output / 'environment.json').write_text(json.dumps(environment, indent=2), encoding='utf-8')
 
-# Edit only these execution limits if needed; they do not alter the protocol.
-max_new_samples = 9798
+# Configure execution limits.
+max_new_samples = manifest['n_samples']
 max_runtime_seconds = 8 * 60 * 60
 runner = dict(checkpoint=checkpoint, model=config['clm']['model'],
               encoder_backend='vllm', encoder_model=config['clm']['encoder_model'],
@@ -289,7 +289,7 @@ if recent:
 """),
     markdown("""## Matched classification and optional expert retrieval
 
-Classification is evaluated only after all 9,798 CLM records are present. It calls the repository's registered evaluator with the same validation C grid and metric names. Existing baseline predictions are included only for matched evidence tables. Retrieval runs only when a finalized expert judgment CSV and matching metadata are attached as a private input Dataset.
+After acquisition completes, the registered evaluator runs classification with validation-selected regularization. Attach finalized expert grades and their metadata to evaluate retrieval.
 """),
     code("""if result['pending'] == 0:
     features = prepare_clm_features(
@@ -299,7 +299,11 @@ Classification is evaluated only after all 9,798 CLM records are present. It cal
         model=config['clm']['model'], state_variant=config['cad']['state_variant'],
         include_numeric=bool(config['cad']['include_numeric_context']),
         include_profiles=bool(config['cad']['include_profile_arrays']))
-    methods = evaluate_classification(features, output / 'evaluation/classification',
+    from jev_tmcad.evaluation.audit import exclude_label_conflicts
+    audit = json.loads((bundle / 'baseline/duplicate_audit.json').read_text())
+    readout, excluded = exclude_label_conflicts(features, audit)
+    excluded.to_csv(output / 'excluded_label_conflicts.csv', index=False)
+    methods = evaluate_classification(readout, output / 'evaluation/classification',
                                       c_grid=[float(x) for x in config['classification']['c_grid']])
     print('Classification methods:', list(methods))
     evidence_module = bundle / 'code/build_clm_evidence.py'

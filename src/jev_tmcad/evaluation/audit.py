@@ -1,4 +1,4 @@
-"""Exact-file leakage audit; near-duplicate family review remains a manual step."""
+"""Exact-file identities and source-label consistency."""
 from __future__ import annotations
 
 import hashlib
@@ -7,6 +7,19 @@ from pathlib import Path
 import pandas as pd
 
 from jev_tmcad.utils import write_json
+
+
+def exclude_label_conflicts(frame: pd.DataFrame, audit: dict) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Select aligned readout parts with consistent labels for identical files."""
+    audited = {str(s["sample_id"]) for g in audit["groups"] for s in g["samples"]}
+    if not audited.issubset(set(frame["sample_id"].astype(str))):
+        raise ValueError("Duplicate audit contains samples outside the feature cohort")
+    conflicts = {str(s["sample_id"]): g["sha256"] for g in audit["groups"]
+                 if g["conflicting_labels"] for s in g["samples"]}
+    mask = frame["sample_id"].astype(str).isin(conflicts)
+    excluded = frame.loc[mask, ["sample_id", "split", "label"]].copy()
+    excluded["file_sha256"] = excluded["sample_id"].astype(str).map(conflicts)
+    return frame.loc[~mask].copy(), excluded
 
 
 def audit_exact_duplicates(cohort: pd.DataFrame, output_path: Path) -> dict:

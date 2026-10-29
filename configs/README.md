@@ -13,6 +13,7 @@ python run.py --config configs/study_full.yaml study-experiments
 | `study_full_ft.yaml` | The full workflow with locally adapted Laya and retrieval annotations |
 | `study_full_ft_kaggle.yaml` | Evaluation after importing the four-epoch Kaggle Laya run |
 | `study_full_ft_10epoch_kaggle.yaml` | Evaluation after importing the ten-epoch Kaggle Laya run |
+| `study_prompting.yaml` | Matched zero-shot/four-shot Jev acquisition and fusion |
 | `study_clm.yaml` | The CLM extension, including checkpoint and encoder settings |
 | `analysis.yaml` | Analysis of the recorded full study, writing to `analysis/evaluation/` |
 | `study.yaml`, `study_compact.yaml` | Earlier subset runs, useful for smaller checks |
@@ -29,3 +30,8 @@ paths. Set `project.dataset_root` for scanning, and use separate `study.*` and
 
 `study_full.yaml` uses compact model inputs, even though its name refers to the
 full cohort size. `study_compact.yaml` is an earlier subset configuration.
+
+Main configurations use the 32-dimensional surface encoder and conflict-filtered
+classification readouts. Run `study-audit` before evaluation. Set
+`geometry.edge_channels`, `geometry.projection_dim`, and `geometry.embedding_dim`
+to choose another encoder size.

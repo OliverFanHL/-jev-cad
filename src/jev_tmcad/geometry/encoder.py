@@ -42,7 +42,10 @@ def _checkpoint_sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def _model(embedding_dim: int):
+def _model(embedding_dim: int, *, edge_channels: tuple[int, int] = (32, 64),
+           projection_dim: int = 64):
+    if len(edge_channels) != 2 or min(*edge_channels, projection_dim, embedding_dim) < 1:
+        raise ValueError("Encoder widths must be positive and specify two EdgeBlocks")
     torch = _torch()
     nn = torch.nn
 
@@ -64,10 +67,11 @@ def _model(embedding_dim: int):
     class LocalSurfaceEncoder(nn.Module):
         def __init__(self):
             super().__init__()
-            self.edge1 = EdgeBlock(6, 64)
-            self.edge2 = EdgeBlock(64, 128)
-            self.embedding = nn.Sequential(nn.Linear(384, 256), nn.ReLU(), nn.Dropout(0.2),
-                                           nn.Linear(256, embedding_dim))
+            self.edge1 = EdgeBlock(6, edge_channels[0])
+            self.edge2 = EdgeBlock(edge_channels[0], edge_channels[1])
+            self.embedding = nn.Sequential(nn.Linear(3 * edge_channels[1], projection_dim),
+                                           nn.ReLU(), nn.Dropout(0.2),
+                                           nn.Linear(projection_dim, embedding_dim))
             self.classifier = nn.Linear(embedding_dim, len(TMCAD_CLASSES))
 
         def forward(self, points, neighbors):
@@ -146,7 +150,8 @@ def _predict(model, rows: list[dict], batch_size: int, device: str,
 def train_geometry(cohort: pd.DataFrame, mesh_manifest: pd.DataFrame, checkpoint: Path, *,
                    seed: int, device: str, epochs: int, batch_size: int, learning_rate: float,
                    weight_decay: float, embedding_dim: int, patience: int,
-                   cache_in_memory: bool = False) -> dict:
+                   cache_in_memory: bool = False, edge_channels: tuple[int, int] = (32, 64),
+                   projection_dim: int = 64) -> dict:
     torch = _torch()
     from sklearn.metrics import f1_score
 
@@ -168,7 +173,9 @@ def train_geometry(cohort: pd.DataFrame, mesh_manifest: pd.DataFrame, checkpoint
     preload_start = time.perf_counter()
     mesh_cache, cache_bytes = _preload_meshes(train + val) if cache_in_memory else (None, 0)
     preload_seconds = time.perf_counter() - preload_start if cache_in_memory else 0.0
-    model = _model(embedding_dim).to(device)
+    architecture = {"embedding_dim": embedding_dim, "edge_channels": tuple(edge_channels),
+                    "projection_dim": projection_dim}
+    model = _model(**architecture).to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
     best = -1.0
     wait = 0
@@ -200,7 +207,7 @@ def train_geometry(cohort: pd.DataFrame, mesh_manifest: pd.DataFrame, checkpoint
                             "val_macro_f1": score, "epoch_seconds": time.perf_counter() - epoch_started})
             if score > best:
                 best, wait = score, 0
-                torch.save({"state_dict": model.state_dict(), "embedding_dim": embedding_dim,
+                torch.save({"state_dict": model.state_dict(), **architecture,
                             "cohort_hash": cohort_hash(cohort), "mesh_hash": mesh_cache_hash(mesh_manifest),
                             "epoch": epoch + 1,
                             "classes": TMCAD_CLASSES}, checkpoint)
@@ -214,6 +221,7 @@ def train_geometry(cohort: pd.DataFrame, mesh_manifest: pd.DataFrame, checkpoint
                 break
     details = {"best_val_macro_f1": best, "best_epoch": history[int(np.argmax([h["val_macro_f1"] for h in history]))]["epoch"],
                "history": history, "device": device, "torch": torch.__version__,
+               "architecture": architecture,
                "configured_epochs": epochs, "completed_epochs": len(history),
                "stop_reason": stop_reason, "patience": patience,
                "epochs_without_improvement": wait,
@@ -236,7 +244,9 @@ def extract_embeddings(cohort: pd.DataFrame, mesh_manifest: pd.DataFrame, checkp
         raise ValueError("Geometry checkpoint was trained on a different cohort")
     if saved["mesh_hash"] != mesh_cache_hash(mesh_manifest):
         raise ValueError("Geometry checkpoint was trained on a different mesh cache")
-    model = _model(saved["embedding_dim"])
+    model = _model(saved["embedding_dim"],
+                   edge_channels=tuple(saved.get("edge_channels", (64, 128))),
+                   projection_dim=saved.get("projection_dim", 256))
     model.load_state_dict(saved["state_dict"])
     model = model.to(device)
     rows = cohort.merge(mesh_manifest[["sample_id", "mesh_path"]], on="sample_id", validate="one_to_one")

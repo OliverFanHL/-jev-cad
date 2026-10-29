@@ -1,8 +1,4 @@
-"""Deterministic local surface samples from STEP B-Reps.
-
-The representation retains point neighborhoods and surface normals; labels and
-paths are never part of the tensors passed to the geometry encoder.
-"""
+"""Surface-point sampling, fixed neighborhoods, and mesh-cache identities."""
 from __future__ import annotations
 
 import hashlib

@@ -22,13 +22,10 @@ python -m pip install -r requirements-figures.txt
 | `evaluate_visual_proxy.py` | Retrieval metrics from those automatic scores |
 
 `cad_render.py` and `clm_manuscript_data.py` are shared helpers.
-The review-interface illustration was previously named
-`build_expert_review_guide_v10_compact.py`.
 
 The scripts read baseline predictions from `analysis/evaluation/` and imported
 CLM outputs from `outputs/study/clm/kaggle_import/`. Tables go in
-`analysis/evidence/`; figures go in `analysis/figures/`. The public repository
-does not include those result inputs.
+`analysis/evidence/`; figures go in `analysis/figures/`. Supply evaluation outputs from your run at those paths.
 
 For example, with saved classification results available:
 

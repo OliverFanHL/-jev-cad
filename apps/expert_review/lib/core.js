@@ -1,8 +1,5 @@
-import fs from 'node:fs';
 import { timingSafeEqual } from 'node:crypto';
 
-export const manifest = JSON.parse(fs.readFileSync(new URL('../data/pairs.json', import.meta.url), 'utf8'));
-export const pairById = new Map(manifest.pairs.map(pair => [pair.pair_id, pair]));
 export const roles = ['rater_a', 'rater_b', 'adjudication'];
 
 export function authenticatedRole(req) {
@@ -28,7 +25,7 @@ export function sendJson(res, status, body) {
   res.status(status).json(body);
 }
 
-export function validSubmission(body) {
+export function validSubmission(body, pairById) {
   if (!body || !pairById.has(body.pair_id)) return 'Unknown pair ID';
   if (!Number.isInteger(body.grade) || body.grade < 0 || body.grade > 3) return 'Grade must be 0, 1, 2, or 3';
   if (!Number.isInteger(body.expected_version) || body.expected_version < 0) return 'Invalid version';
@@ -53,8 +50,8 @@ export function exportCsv(pairs, ratings) {
   return lines.join('\r\n') + '\r\n';
 }
 
-export function disagreementIds(a, b) {
-  return new Set(manifest.pairs.filter(pair =>
+export function disagreementIds(a, b, pairs) {
+  return new Set(pairs.filter(pair =>
     a.has(pair.pair_id) && b.has(pair.pair_id) &&
     a.get(pair.pair_id).grade !== b.get(pair.pair_id).grade
   ).map(pair => pair.pair_id));

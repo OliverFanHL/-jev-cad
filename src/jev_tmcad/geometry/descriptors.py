@@ -239,11 +239,7 @@ def extract_descriptor(
     angular_bins: int = 72,
     axial_bins: int = 12,
 ) -> dict[str, Any]:
-    """Extract label-free deterministic B-rep/mesh descriptors from one STEP file.
-
-    The output intentionally does not include the filename, directory, or class label.
-    Those fields are kept in the manifest only and never sent to Jev.
-    """
+    """Extract deterministic B-Rep and sampled-profile measurements from a STEP file."""
     shape = _load_shape(step_path)
     bb = shape.BoundingBox()
     xlen, ylen, zlen = float(bb.xlen), float(bb.ylen), float(bb.zlen)

@@ -1,4 +1,5 @@
-import { authenticatedRole, disagreementIds, manifest, sendJson } from '../lib/core.js';
+import { authenticatedRole, disagreementIds, sendJson } from '../lib/core.js';
+import { manifest } from '../lib/manifest.js';
 import { database, independentCounts, ratingsFor } from '../lib/db.js';
 
 export default async function handler(req, res) {
@@ -15,7 +16,7 @@ export default async function handler(req, res) {
       const a = await ratingsFor(sql, hash, 'rater_a');
       const b = await ratingsFor(sql, hash, 'rater_b');
       const adjud = await ratingsFor(sql, hash, 'adjudication');
-      const disagreements = disagreementIds(a, b);
+      const disagreements = disagreementIds(a, b, manifest.pairs);
       return sendJson(res, 200, { role, total: manifest.pairs.length,
         completed_a: a.size, completed_b: b.size,
         disagreements: disagreements.size,
@@ -28,7 +29,7 @@ export default async function handler(req, res) {
       if (independentComplete) {
         const a = await ratingsFor(sql, hash, 'rater_a');
         const b = await ratingsFor(sql, hash, 'rater_b');
-        const disagreements = disagreementIds(a, b);
+        const disagreements = disagreementIds(a, b, manifest.pairs);
         pairs = pairs.filter(pair => disagreements.has(pair.pair_id));
         comparison = Object.fromEntries(pairs.map(pair => [pair.pair_id,
           [a.get(pair.pair_id).grade, b.get(pair.pair_id).grade]]));
@@ -43,6 +44,6 @@ export default async function handler(req, res) {
       complete: pairs.filter(pair => own.has(pair.pair_id)).length });
   } catch (error) {
     console.error('Session load failed', error);
-    return sendJson(res, 503, { error: 'Annotation storage is unavailable. No progress was changed.' });
+    return sendJson(res, 503, { error: 'Annotation storage is unavailable. Try again shortly.' });
   }
 }

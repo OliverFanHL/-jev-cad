@@ -1,8 +1,4 @@
-"""Postprocess saved CLM evaluation outputs for later manuscript figures/tables.
-
-This reads predictions only. It does not fit models, perform inference, or
-change the frozen evaluation files.
-"""
+"""Build CLM comparison tables from saved evaluator predictions."""
 from __future__ import annotations
 
 import argparse
@@ -41,7 +37,8 @@ def build(clm_eval: Path, baseline_eval: Path, output: Path,
     base_summary = json.loads((base / "summary.json").read_text(encoding="utf-8"))["methods"]
     if not set(CLM_METHODS).issubset(summary):
         raise ValueError("Aggregate CLM classification output is incomplete")
-    cohort = pd.read_csv(cohort_path, dtype={"sample_id": str})
+    source_manifest = base / "source_manifest.csv"
+    cohort = pd.read_csv(source_manifest if source_manifest.exists() else cohort_path, dtype={"sample_id": str})
     if cohort["sample_id"].duplicated().any():
         raise ValueError("Frozen cohort has duplicate sample IDs")
     test_ids = set(cohort.loc[cohort["split"] == "test", "sample_id"])
@@ -50,7 +47,7 @@ def build(clm_eval: Path, baseline_eval: Path, output: Path,
     for name in REFERENCE_METHODS:
         if (clm / f"{name}.csv").exists() and not _predictions(clm, name, test_ids)[
                 ["label", "prediction"]].equals(predictions[name][["label", "prediction"]]):
-            raise ValueError(f"{name} differs from the published matched baseline")
+            raise ValueError(f"{name} differs from the matched baseline")
     y = predictions["descriptor_plus_geometry"]["label"]
     if any(not p["label"].equals(y) for p in predictions.values()):
         raise ValueError("CLM predictions differ in test labels")

@@ -1,8 +1,4 @@
-"""Reproduce the saved automatic silhouette endpoint, never expert ratings.
-
-Extracted from the original proxy computation without the separate synthetic
-rater smoke-test machinery. Requires the frozen pairs and rendered CAD views.
-"""
+"""Compute two-view silhouette similarities for CAD pairs."""
 from __future__ import annotations
 
 import argparse

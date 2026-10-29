@@ -18,7 +18,8 @@ from jev_tmcad.geometry.descriptors import numeric_feature_columns
 from jev_tmcad.data.dataset import TMCAD_CLASSES
 from jev_tmcad.provenance import class_label_mapping, source_manifest, with_source_labels
 from jev_tmcad.evaluation.reporting import prediction_frame, save_confusion
-from jev_tmcad.semantic_state import QuantileSchema, build_compact_semantic_state, build_semantic_state
+from jev_tmcad.semantic_state import (QuantileSchema, build_compact_semantic_state,
+                                     build_semantic_state, compact_numeric_frame)
 from jev_tmcad.data.cohort import check_cohort_hash, cohort_hash, valid_descriptors
 from jev_tmcad.evaluation.experiments import CLASSIFICATION_PROBES, classification_ids, feature_blocks
 from jev_tmcad.utils import read_jsonl, sha256_json, write_json
@@ -132,6 +133,7 @@ def prepare_features(cohort: pd.DataFrame, descriptor_path: Path, embeddings_pat
     if len(frame) != len(cohort):
         raise ValueError("Descriptor coverage differs from cohort")
     frame = frame.rename(columns={c: f"desc__{c}" for c in desc_cols})
+    frame = pd.concat([frame, compact_numeric_frame(state_rows).reset_index(drop=True)], axis=1)
     if not embeddings_path.exists():
         raise FileNotFoundError(f"Geometry embeddings missing: {embeddings_path}")
     check_cohort_hash(cohort, embeddings_path.with_suffix(".meta.json"))
@@ -142,8 +144,7 @@ def prepare_features(cohort: pd.DataFrame, descriptor_path: Path, embeddings_pat
             raise ValueError("Geometry embedding file is stale relative to its checkpoint")
     elif emb_meta["checkpoint_sha256"] != recorded_geometry_checkpoint_sha256:
         # Cached-feature analysis: the caller verifies the distributed feature
-        # archive and supplies the recorded checkpoint identity. This does not
-        # claim to verify an undistributed serialized checkpoint.
+        # archive and supplies the recorded checkpoint identity.
         raise ValueError("Geometry checkpoint identity differs from the release record")
     emb = pd.read_csv(embeddings_path, dtype={"sample_id": str})
     joined_meta = cohort[["sample_id", "split", "label"]].merge(
@@ -221,8 +222,8 @@ def _direct(frame: pd.DataFrame, backend: str, output_dir: Path,
             mapping: dict[str, list[str]]) -> dict:
     test = frame[frame["split"] == "test"]
     y = test["label"].to_numpy()
-    pred = test[f"{backend}__choice"].to_numpy()
     p = test[[f"{backend}__prob__{c}" for c in TMCAD_CLASSES]].to_numpy(dtype=float)
+    pred = np.asarray(TMCAD_CLASSES)[p.argmax(axis=1)]
     result = _metrics(y, pred, p)
     result["selection"] = "none; frozen typed Choice"
     _save_method(test, pred, p, output_dir, f"{backend}_direct_choice", mapping)
@@ -242,7 +243,7 @@ def evaluate_classification(frame: pd.DataFrame, output_dir: Path, *, c_grid: li
         "source": "original class-folder component of relative_path",
     })
     if set(frame["split"]) != {"train", "val", "test"}:
-        raise ValueError("Classification requires train, validation, and untouched test splits")
+        raise ValueError("Classification requires train, validation, and test splits")
     blocks = feature_blocks(frame)
     groups = {name: [col for block in recipe for col in blocks[block]]
               for name, recipe in CLASSIFICATION_PROBES.items()
@@ -264,7 +265,7 @@ def evaluate_classification(frame: pd.DataFrame, output_dir: Path, *, c_grid: li
         results["geometry_encoder_head"] = _metrics(test["label"].to_numpy(), pred, probabilities)
         results["geometry_encoder_head"]["selection"] = "checkpoint epoch selected on validation macro F1"
         _save_method(test, pred, probabilities, output_dir, "geometry_encoder_head", mapping)
-    for backend in ("jev", "laya", "laya_ft", "clm"):
+    for backend in ("jev", "laya", "laya_ft", "clm", "jev_fs0", "jev_fs4"):
         if (only is None or only == f"{backend}_direct_choice") and f"{backend}__choice" in frame:
             results[f"{backend}_direct_choice"] = _direct(frame, backend, output_dir, mapping)
     for name, cols in groups.items():

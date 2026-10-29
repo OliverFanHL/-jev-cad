@@ -4,12 +4,20 @@ from __future__ import annotations
 from jev_tmcad.data.dataset import TMCAD_CLASSES
 
 
-# Each tuple names a feature block, not a separately fitted model. All linear
-# probes use the same train/validation/test cohort and C grid.
+# Feature recipes share the cohort and validation-selected regularization grid.
 CLASSIFICATION_PROBES = {
     "descriptor_only": ("descriptor",),
+    "compact_state": ("compact",),
+    "compact_state_plus_jev": ("compact", "jev_signature"),
     "geometry_embedding": ("geometry",),
     "descriptor_plus_geometry": ("descriptor", "geometry"),
+    "descriptor_plus_geometry_plus_jev": ("descriptor", "geometry", "jev_signature"),
+    "jev_fs0_choice_probabilities": ("jev_fs0_choice",),
+    "jev_fs4_choice_probabilities": ("jev_fs4_choice",),
+    "descriptor_plus_geometry_plus_jev_fs0": ("descriptor", "geometry", "jev_fs0_choice"),
+    "descriptor_plus_geometry_plus_jev_fs4": ("descriptor", "geometry", "jev_fs4_choice"),
+    "geometry_plus_jev_plus_fs0": ("geometry", "jev_signature", "jev_fs0_choice"),
+    "geometry_plus_jev_plus_fs4": ("geometry", "jev_signature", "jev_fs4_choice"),
     "jev_choice_probabilities": ("jev_choice",),
     "geometry_plus_jev_choice_probabilities": ("geometry", "jev_choice"),
     "jev_geometry_questions": ("jev_geometry",),
@@ -39,6 +47,8 @@ CLASSIFICATION_PROBES = {
 }
 
 CLASSIFICATION_DIRECT = {
+    "jev_fs0_direct_choice": "matched zero-shot Jev Choice probabilities",
+    "jev_fs4_direct_choice": "matched four-shot-per-class Jev Choice probabilities",
     "geometry_encoder_head": "validation-selected geometry checkpoint logits",
     "jev_direct_choice": "typed JEV Choice answer",
     "laya_direct_choice": "typed Laya Choice answer",
@@ -66,8 +76,9 @@ def feature_blocks(frame):
     blocks = {
         "descriptor": [c for c in columns if c.startswith("desc__")],
         "geometry": [c for c in columns if c.startswith("geom__")],
+        "compact": [c for c in columns if c.startswith("compact__")],
     }
-    for backend in ("jev", "laya", "laya_ft", "clm"):
+    for backend in ("jev", "laya", "laya_ft", "clm", "jev_fs0", "jev_fs4"):
         signature = [c for c in columns if c.startswith(f"{backend}__sig__")]
         choice = [f"{backend}__prob__{c}" for c in TMCAD_CLASSES]
         blocks[f"{backend}_signature"] = signature

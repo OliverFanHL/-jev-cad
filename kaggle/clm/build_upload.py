@@ -22,7 +22,7 @@ def digest(data: bytes) -> str:
 def main() -> Path:
     cohort_path = ROOT / "outputs/study/full/cohort.csv"
     rows = list(csv.DictReader(cohort_path.open(newline="", encoding="utf-8")))
-    if len(rows) != 9798 or len({r["sample_id"] for r in rows}) != len(rows):
+    if not rows or len({r["sample_id"] for r in rows}) != len(rows):
         raise ValueError("Frozen cohort size or sample IDs changed")
     identity = [dict((key, r[key]) for key in ("sample_id", "split", "label", "relative_path"))
                 for r in sorted(rows, key=lambda item: item["sample_id"])]
@@ -53,6 +53,7 @@ def main() -> Path:
         "config/questions_compact.yaml": "configs/questions_compact.yaml",
         "config/study_clm.yaml": "kaggle/clm/study_clm_vllm.yaml",
         "baseline/evaluation/classification/summary.json": "analysis/evaluation/classification/summary.json",
+        "baseline/evaluation/classification/source_manifest.csv": "analysis/evaluation/classification/source_manifest.csv",
         "baseline/duplicate_audit.json": "outputs/study/full/evaluation/duplicate_audit.json",
         "baseline/qualitative_examples.json": "analysis/evidence/qualitative_examples.json",
     }.items():

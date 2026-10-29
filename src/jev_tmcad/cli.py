@@ -15,8 +15,10 @@ from jev_tmcad.geometry.extraction import extract_dataset_descriptors
 from jev_tmcad.models.jev import run_jev_for_dataframe
 from jev_tmcad.evaluation.qualitative import generate_qualitative_report
 from jev_tmcad.evaluation.pilot_retrieval import evaluate_retrieval
-from jev_tmcad.semantic_state import QuantileSchema, build_semantic_state, fit_quantile_schema
+from jev_tmcad.semantic_state import (QuantileSchema, build_semantic_state,
+                                     build_compact_semantic_state, fit_quantile_schema)
 from jev_tmcad.workflows.study import register_study_commands
+from jev_tmcad.workflows.prompting import register_prompt_commands
 from jev_tmcad.utils import setup_logging, write_json
 
 LOGGER = logging.getLogger(__name__)
@@ -102,14 +104,15 @@ def cmd_inspect_state(args) -> None:
         valid = valid[valid["sample_id"].astype(str) == args.sample_id]
     rows = valid.head(args.n)
     for _, row in rows.iterrows():
-        state = build_semantic_state(
+        builder = build_compact_semantic_state if cfg.get("cad.state_variant") == "compact" else build_semantic_state
+        state = builder(
             row,
             schema,
             include_numeric_context=bool(cfg.get("cad.include_numeric_context", True)),
             include_profile_arrays=bool(cfg.get("cad.include_profile_arrays", True)),
         )
         print("=" * 80)
-        print(f"sample_id={row['sample_id']} (ground truth shown here for local audit only: {row['label']})")
+        print(f"sample_id={row['sample_id']}, source_class={row['label']}")
         print(json.dumps(state, indent=2, ensure_ascii=False))
 
 
@@ -284,6 +287,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--dry-run", action="store_true")
     p.set_defaults(func=cmd_all)
     register_study_commands(sub)
+    register_prompt_commands(sub)
     return parser
 
 

@@ -189,8 +189,7 @@ def evaluate_classification(
         )
 
     # 3) Logistic regression on Jev semantic signatures (requires train + test API outputs).
-    #    We report a geometry-only signature separately from the full signature so
-    #    taxonomy-aligned functional questions do not get hidden inside one score.
+    #    Report geometry-focused and complete response vectors separately.
     sig = _signature_frame(jev)
     if not sig.empty:
         sig = sig.merge(desc[["sample_id", "split", "label", "source_label", "relative_path", "absolute_path"]],

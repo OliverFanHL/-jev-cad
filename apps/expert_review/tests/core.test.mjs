@@ -1,11 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { authenticatedRole, disagreementIds, exportCsv, manifest, validSubmission } from '../lib/core.js';
+import { authenticatedRole, disagreementIds, exportCsv, validSubmission } from '../lib/core.js';
 
-test('frozen blinded manifest matches the study selection', () => {
-  assert.equal(manifest.pairs.length, 6645);
-  assert.equal(manifest.asset_ids.length, 2643);
-  assert.equal(new Set(manifest.pairs.map(p => p.pair_id)).size, 6645);
+const manifest = { pairs: [
+  { pair_id: 'a'.repeat(24), split: 'test', query_id: 'q1', candidate_id: 'c1' },
+  { pair_id: 'b'.repeat(24), split: 'val', query_id: 'q2', candidate_id: 'c2' },
+] };
+const pairById = new Map(manifest.pairs.map(pair => [pair.pair_id, pair]));
+
+
+test('blinded pair fixture uses unique opaque identifiers', () => {
+  assert.equal(new Set(manifest.pairs.map(p => p.pair_id)).size, manifest.pairs.length);
   for (const pair of manifest.pairs) {
     assert.deepEqual(Object.keys(pair), ['pair_id', 'split', 'query_id', 'candidate_id']);
     assert.match(pair.pair_id, /^[a-f0-9]{24}$/);
@@ -14,10 +19,10 @@ test('frozen blinded manifest matches the study selection', () => {
 
 test('submission checks pair, grade, version and evidence length', () => {
   const pair_id = manifest.pairs[0].pair_id;
-  assert.equal(validSubmission({ pair_id, grade: 2, evidence: 'Same bore.', expected_version: 0 }), null);
-  assert.match(validSubmission({ pair_id, grade: 4, evidence: '', expected_version: 0 }), /Grade/);
-  assert.match(validSubmission({ pair_id, grade: 1, evidence: '', expected_version: -1 }), /version/);
-  assert.match(validSubmission({ pair_id: 'unknown', grade: 1, evidence: '', expected_version: 0 }), /pair/);
+  assert.equal(validSubmission({ pair_id, grade: 2, evidence: 'Same bore.', expected_version: 0 }, pairById), null);
+  assert.match(validSubmission({ pair_id, grade: 4, evidence: '', expected_version: 0 }, pairById), /Grade/);
+  assert.match(validSubmission({ pair_id, grade: 1, evidence: '', expected_version: -1 }, pairById), /version/);
+  assert.match(validSubmission({ pair_id: 'unknown', grade: 1, evidence: '', expected_version: 0 }, pairById), /pair/);
 });
 
 test('role token is server-side and exact', () => {
@@ -38,5 +43,5 @@ test('adjudication includes only independently rated disagreements', () => {
   const [first, second] = manifest.pairs;
   const a = new Map([[first.pair_id, { grade: 1 }], [second.pair_id, { grade: 2 }]]);
   const b = new Map([[first.pair_id, { grade: 3 }], [second.pair_id, { grade: 2 }]]);
-  assert.deepEqual([...disagreementIds(a, b)], [first.pair_id]);
+  assert.deepEqual([...disagreementIds(a, b, manifest.pairs)], [first.pair_id]);
 });

@@ -40,12 +40,14 @@ def main() -> None:
         raise FileExistsError(f"Kaggle output already imported: {target}; preserve the existing result")
     upload = ROOT / "kaggle/laya/upload" / upload_name
     with zipfile.ZipFile(upload) as source:
-        expected_input_hash = hashlib.sha256(source.read("jev_tmcad_laya_ft/manifest.json")).hexdigest()
+        input_bytes = source.read("jev_tmcad_laya_ft/manifest.json")
+        expected_input_hash = hashlib.sha256(input_bytes).hexdigest()
+        expected_count = json.loads(input_bytes)["n_samples"]
     with zipfile.ZipFile(args.archive) as archive:
         names = archive.namelist()
-        # if not names or any(Path(n).is_absolute() or ".." in Path(n).parts or
-        #                     Path(n).parts[0] != output_folder for n in names):
-        #     raise ValueError("Downloaded archive has unsafe or unexpected paths")
+        if not names or any(Path(n).is_absolute() or ".." in Path(n).parts or
+                            Path(n).parts[0] != output_folder for n in names):
+            raise ValueError("Downloaded archive has unsafe or unexpected paths")
         manifest_name = f"{output_folder}/output_manifest.json"
         if manifest_name not in names:
             raise ValueError("Downloaded archive lacks its output manifest")
@@ -77,8 +79,8 @@ def main() -> None:
                     if sid in seen or row["model"] != f"laya-ft:{result_manifest['model_sha256']}":
                         raise ValueError(f"Duplicate ID or wrong model identity in Kaggle result: {sid}")
                     seen.add(sid)
-            if len(seen) != 9798:
-                raise ValueError(f"Kaggle result has {len(seen)} samples; expected 9,798")
+            if len(seen) != expected_count:
+                raise ValueError(f"Kaggle result has {len(seen)} samples; expected {expected_count}")
             shutil.move(str(extracted), str(target))
     print(f"Imported verified Kaggle artifacts into {target}")
     print(f"Continue with: python run.py --config configs/{config_name} study-evaluate --classification-only")

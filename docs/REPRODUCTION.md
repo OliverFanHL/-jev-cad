@@ -35,6 +35,7 @@ existing splits:
 
 ```bash
 python run.py --config configs/study_full.yaml study-plan
+python run.py --config configs/study_full.yaml study-audit
 python run.py --config configs/study_full.yaml study-mesh
 python run.py --config configs/study_full.yaml study-train-geometry
 python run.py --config configs/study_full.yaml study-embed
@@ -42,7 +43,9 @@ python run.py --config configs/study_full.yaml study-embed
 
 The cohort, mesh cache, encoder checkpoint, and embeddings are written under
 `outputs/study/full/`. PyTorch handles encoder training; a GPU is useful for
-larger runs. `study-audit` checks exact duplicate CAD files across splits.
+larger runs. `study-audit` records identical files and conflicting labels for the aligned
+classification readouts. The default encoder uses widths 32/64 and produces
+32-dimensional embeddings.
 
 For a new run alongside existing results, copy the configuration and change its
 output paths first. Keep the same cohort throughout acquisition and evaluation.
@@ -132,34 +135,20 @@ python run.py --config configs/study_full_ft.yaml study-grade-finalize
 python run.py --config configs/study_full_ft.yaml study-evaluate
 ```
 
-The automatic silhouette comparison is a separate tool in the
-[analysis guide](../analysis/README.md). Its scores measure visual similarity;
-expert relevance grades come from the review workflow.
+The [analysis guide](../analysis/README.md) covers figures and automatic
+silhouette comparisons.
 
-## Working with a saved result bundle
+## 7. Compare matched prompts
 
-The public repository does not include the saved study outputs. If you have a
-companion bundle, place its archives and `ARTIFACT_PROVENANCE.json` in the
-repository, keeping their directory structure. The helper scripts also accept
-the earlier `research_v2/` and `kaggle_laya/` bundle paths.
+Use the shared cohort and duplicate audit from the earlier stages:
 
 ```bash
-python scripts/materialize_artifacts.py
-python scripts/verify_results.py
-python scripts/recompute_evaluation.py --task classification
+python run.py --config configs/study_prompting.yaml study-prompt --dry-run
+python run.py --config configs/study_prompting.yaml study-prompt
+python run.py --config configs/study_prompting.yaml study-evaluate --classification-only
 ```
 
-Materialization expands the archives into the current layout. Verification
-checks hashes, sample pairing, and metrics using the standard library.
-Recomputation fits the downstream probes on saved features and writes to
-`recomputed/classification/`. It needs the installed evaluation dependencies.
-
-For STEP-dependent work, add `--dataset /path/to/TMCAD` to materialization to
-update local CAD paths. To evaluate the saved automatic visual-similarity
-endpoint, use `--task visual-proxy-retrieval` with the recomputation script.
-
-The historical cohort contains 9,798 parts: 6,858 training, 980 validation, and
-1,960 test parts. It includes exact-file overlap across splits, and the test set
-was inspected during development. Keep those limitations in mind when using
-the historical metrics. Saved bundle metadata records checkpoint identities,
-environment versions, and the source of retrieval scores.
+The preview saves the complete requests. Acquisition caches payloads and saves
+one response record per part and shot condition. Evaluation includes the matched
+zero-shot and four-shot direct decisions and feature fusions. Set the output
+directory and shot counts in `prompting`.

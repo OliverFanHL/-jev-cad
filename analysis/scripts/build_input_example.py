@@ -1,6 +1,6 @@
 """Trace one held-out STEP part to the exact compact typed-decision request.
 
-The example is explanatory, not selected as an additional performance trial.
+Render a STEP part alongside its compact geometric input.
 All numbers and responses are loaded from saved study artifacts.
 """
 from pathlib import Path

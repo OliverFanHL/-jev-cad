@@ -1,4 +1,5 @@
-import { authenticatedRole, manifest, pairById, sendJson, validSubmission } from '../lib/core.js';
+import { authenticatedRole, sendJson, validSubmission } from '../lib/core.js';
+import { manifest, pairById } from '../lib/manifest.js';
 import { database, independentCounts, ratingsFor } from '../lib/db.js';
 
 export default async function handler(req, res) {
@@ -8,7 +9,7 @@ export default async function handler(req, res) {
   let body;
   try { body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body; }
   catch { return sendJson(res, 400, { error: 'Invalid JSON' }); }
-  const invalid = validSubmission(body);
+  const invalid = validSubmission(body, pairById);
   if (invalid) return sendJson(res, 400, { error: invalid });
   const { pair_id, grade, evidence, expected_version } = body;
   if (!pairById.has(pair_id)) return sendJson(res, 400, { error: 'Unknown pair ID' });

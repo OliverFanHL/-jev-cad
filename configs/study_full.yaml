@@ -4,6 +4,7 @@ project:
   seed: 42
 
 study:
+  duplicate_audit_path: outputs/study/full/evaluation/duplicate_audit.json
   descriptor_path: outputs/descriptors/tmcad_descriptors.csv
   schema_path: outputs/descriptors/quantile_schema.json
   questions_path: configs/questions_compact.yaml
@@ -40,7 +41,9 @@ geometry:
   patience: 12
   batch_size: 16
   cache_in_memory: true  # true avoids reopening meshes each epoch; needs about 0.6-1 GB extra RAM.
-  embedding_dim: 128
+  embedding_dim: 32
+  edge_channels: [32, 64]
+  projection_dim: 64
   learning_rate: 0.001
   weight_decay: 0.0001
 
@@ -57,6 +60,7 @@ laya:
   revision: null
 
 classification:
+  exclude_conflicting_labels: true
   c_grid: [0.01, 0.1, 1.0, 10.0]
 
 retrieval:

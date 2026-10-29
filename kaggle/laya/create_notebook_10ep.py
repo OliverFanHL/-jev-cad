@@ -22,11 +22,11 @@ def replace_cell(cell: dict, text: str) -> dict:
 cells = [source[i] for i in (0, 1, 2, 3, 4, 5, 6, 7, 8, 9)]
 cells[0] = replace_cell(cells[0], """# Fresh ten-epoch Laya fine-tuning on TMCAD
 
-This independent run starts from the pinned base Laya typed-decisions checkpoint. It uses the **same frozen train/calibration/validation/test population, compact CAD state, Choice/Noul questions, FP16, physical batch 8, accumulation 1, optimizer learning rates, weight decay, and loss** as the four-epoch Kaggle run. The configured maximum changes from 4 to **10**. The original 0.4-to-0.1 RL noise schedule is spread over ten epochs rather than four, so the first four updates are not identical between runs. No previous fine-tuned weights or cached predictions are loaded.
+Start from the pinned base Laya checkpoint and train for up to ten epochs using the prepared CAD states. The RL noise decreases from 0.4 to 0.1 across the run. Validation macro F1 selects the checkpoint, and the calibration partition fits the Choice temperature.
 
-Upload `jev_tmcad_laya_finetune_10ep_v1.zip` as a **private Kaggle Dataset**, attach it under Add Input, select a GPU, and enable Internet for the pinned Laya dependency and base model. Run all cells. The original four-epoch notebook and results remain separate. Test metrics are exploratory because the test split was previously inspected.
+Upload `jev_tmcad_laya_finetune_10ep_v1.zip` as a private Kaggle Dataset. Attach it under Add Input, select a GPU, enable Internet for dependencies and weights, and run the cells.
 
-Each completed epoch writes `laya_epoch_checkpoints/epoch_NN.safetensors` and `epoch_NN.json`. Validation macro F1 selects the best epoch; its Laya-loadable checkpoint is in `laya_checkpoint/`. Calibration uses the unchanged train-only calibration set. All 9,798 matched states then receive fine-tuned inference, direct Choice evaluation, and source traceability. The final ZIP includes **every epoch checkpoint** and the selected checkpoint. Ten large snapshots plus the ZIP may use roughly 18–20 GB in `/kaggle/working`; ensure adequate free space before starting. The archive is created only after all ten epochs and evaluation succeed.
+Each epoch saves a weight snapshot and validation record. The output ZIP contains the selected Laya checkpoint, inference records, and epoch snapshots. Allow storage for both the snapshots and the ZIP.
 """)
 
 input_code = cell_text(cells[1]).replace(
@@ -53,7 +53,7 @@ cells[2] = replace_cell(cells[2], setup)
 
 cells[3] = replace_cell(cells[3], """## Train, validate, and preserve every epoch
 
-Training starts at the pinned base model with a fresh optimizer. The ten epoch weights and scores are saved before the final validation-selected model is calibrated and exported. The progress JSON records the current batch and stage. The test set is never used for selecting an epoch or a temperature. A recovery cell runs first only if all ten epochs have already completed but checkpoint export was interrupted; it never substitutes an older four-epoch run because this notebook uses a separate output directory.
+Training starts at the pinned base model with a fresh optimizer. The ten epoch weights and scores are saved before the final validation-selected model is calibrated and exported. The progress JSON records the current batch and stage. A recovery cell completes checkpoint export when the ten saved epoch records are available.
 """)
 train = cell_text(cells[5])
 train = train.replace("if not (checkpoint / 'study_metadata.json').exists():", 
@@ -93,7 +93,7 @@ old_archive = """with zipfile.ZipFile(archive_path, 'w', compression=zipfile.ZIP
 print('Download:', archive_path)
 print('Output folder:', output)"""
 new_archive = """# A second copy of all large epoch weights is needed while building the ZIP.
-# Never let archive creation exhaust Kaggle storage and jeopardize saved models.
+# Reserve storage for archive creation.
 archive_bytes_upper_bound = sum(path.stat().st_size for path in output.rglob('*') if path.is_file())
 free_bytes = shutil.disk_usage('/kaggle/working').free
 if free_bytes < archive_bytes_upper_bound + 1024**3:

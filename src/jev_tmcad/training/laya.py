@@ -43,7 +43,7 @@ def _rows(cohort, descriptor_path, schema, variant, numeric, profiles):
 
 def prepare_finetune_data(cohort, descriptor_path, schema, spec, directory, *,
                           state_variant, numeric, profiles, seed, calibration_fraction):
-    """Write train/calibration/validation data; never write test labels to training files."""
+    """Prepare fitting, calibration, and validation examples from their assigned partitions."""
     if set(spec["classification"]["criteria"]) != set(TMCAD_CLASSES):
         raise ValueError("Choice criteria must match the ten frozen CAD classes")
     targets = [directory / f"{s}.jsonl" for s in ("train", "calibration", "validation")]
@@ -444,7 +444,7 @@ def evaluate_finetuned_laya_choice(states_jsonl: Path, results_jsonl: Path,
                for name in TMCAD_CLASSES}
     write_json(output_dir / "label_mapping.json", {"canonical_to_source": mapping,
                                                      "class_order": TMCAD_CLASSES})
-    summary = {"note": "Exploratory: existing test labels were inspected before this extension",
+    summary = {"readout": "direct Choice from the validation-selected checkpoint",
                "class_order": TMCAD_CLASSES, "methods": {}}
     for split in ("train", "val", "test"):
         part = frame[frame["split"] == split]

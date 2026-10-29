@@ -24,7 +24,7 @@ apps/expert_review/public/renders/
 dist/
 build/
 
-# Expanded archival copies; committed gzip files retain the source records
+# Generated tables and response records
 outputs/**/*.csv
 outputs/**/*.jsonl
 outputs/**/*.json
@@ -42,3 +42,10 @@ apps/expert_review/data/
 apps/expert_review/render_failures.json
 kaggle/*/upload/
 kaggle/laya/jev_tmcad_laya_ft_result/
+
+.dev-deps/
+.test-tmp/
+outputs/
+
+# Notebooks generated from the builders
+kaggle/*/*.ipynb

@@ -1,4 +1,4 @@
-"""Judged-pair retrieval with validation-selected fusion and no class-label relevance."""
+"""Expert-graded retrieval with validation-selected score fusion."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -122,7 +122,7 @@ def _evaluate(split: str, pairs: pd.DataFrame, ids: list[str], matrix: np.ndarra
 
 
 def load_judgments(path: Path) -> pd.DataFrame:
-    """Load expert grades without silently interpreting an empty pool as truth."""
+    """Load complete integer relevance grades for the selected pairs."""
     pairs = pd.read_csv(path, dtype={"query_id": str, "candidate_id": str,
                                      "split": str, "grade": "string"})
     required = {"split", "query_id", "candidate_id", "grade"}
@@ -139,8 +139,7 @@ def load_judgments(path: Path) -> pd.DataFrame:
             f"and {int(invalid.sum()):,} invalid grades among {len(pairs):,} pairs "
             f"(example CSV lines: {examples}). The study-pool command creates an "
             "ungraded annotation template. Expert-assign grade 0, 1, 2, or 3 to "
-            "every selected pair before retrieval evaluation; do not infer "
-            "relevance from class folders or model scores."
+            "every selected pair before retrieval evaluation."
         )
     pairs["grade"] = numeric.astype("int8")
     return pairs

@@ -53,7 +53,7 @@ class SQLiteResponseCache:
 
 def _build_sdk_questions(spec: dict[str, Any]) -> dict[str, Any]:
     try:
-        from typesafe_sdk import Choice, Noul
+        from typesafe_sdk import Choice, Noul, Score
     except ImportError as exc:
         raise ImportError("Install the current SDK with `pip install typesafe-sdk`.") from exc
 
@@ -65,7 +65,17 @@ def _build_sdk_questions(spec: dict[str, Any]) -> dict[str, Any]:
         )
     }
     for qid, cfg in spec.get("semantic_signature", {}).items():
+        if qid in questions:
+            raise ValueError(f"Duplicate typed question ID: {qid}")
         questions[qid] = Noul(instructions=cfg["instructions"])
+    for qid, cfg in spec.get("auxiliary_choices", {}).items():
+        if qid in questions:
+            raise ValueError(f"Duplicate typed question ID: {qid}")
+        questions[qid] = Choice(instructions=cfg["instructions"], criteria=cfg["criteria"])
+    for qid, cfg in spec.get("ordinal_scores", {}).items():
+        if qid in questions:
+            raise ValueError(f"Duplicate typed question ID: {qid}")
+        questions[qid] = Score(instructions=cfg["instructions"], criteria=cfg["criteria"])
     return questions
 
 
@@ -87,7 +97,7 @@ def _response_to_dict(response: Any, spec: dict[str, Any]) -> dict[str, Any]:
     signature: dict[str, float] = {}
     for qid in spec.get("semantic_signature", {}):
         signature[qid] = float(response.answers[qid].noul)
-    return {
+    result = {
         "model": str(getattr(response, "model", "unknown")),
         "predicted_class": str(class_answer.choice),
         "class_confidence": float(class_answer.confidence),
@@ -95,6 +105,21 @@ def _response_to_dict(response: Any, spec: dict[str, Any]) -> dict[str, Any]:
         "semantic_signature": signature,
         "usage": _usage_to_dict(getattr(response, "usage", None)),
     }
+    # Include configured auxiliary outputs.
+    if spec.get("auxiliary_choices"):
+        result["choice_outputs"] = {
+            spec["auxiliary_choices"][qid].get("output_key", qid): {"choice": str(response.answers[qid].choice),
+                  "probabilities": {str(k): float(v) for k, v in response.answers[qid].probabilities.items()},
+                  "confidence": float(response.answers[qid].confidence)}
+            for qid in spec["auxiliary_choices"]}
+    if spec.get("ordinal_scores"):
+        result["score_outputs"] = {
+            spec["ordinal_scores"][qid].get("output_key", qid): {"score": float(response.answers[qid].score),
+                  "probabilities": {str(k): float(v) for k, v in response.answers[qid].probabilities.items()},
+                  "confidence": float(response.answers[qid].confidence),
+                  "legend": {str(k): v for k, v in response.answers[qid].legend.items()}}
+            for qid in spec["ordinal_scores"]}
+    return result
 
 
 def _call_typesafe(

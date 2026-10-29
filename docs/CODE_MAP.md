@@ -16,6 +16,7 @@ registers the basic scan/extract commands and the full workflow commands from
 | `geometry/extraction.py` | Process a dataset into a descriptor table | `extract_dataset_descriptors` |
 | `geometry/encoder.py` | Train the surface encoder and extract embeddings | `train_geometry`, `extract_embeddings` |
 | `models/jev.py`, `models/laya.py`, `models/clm.py` | Acquire and cache typed responses | `run_jev_for_dataframe`, `run_laya_for_dataframe`, `run_clm_for_dataframe` |
+| `models/prompting.py`, `workflows/prompting.py` | Build matched demonstrations, collect responses, and align prompted Choice features | `build_prompt_requests`, `prompt_feature_frame` |
 | `models/clm_transformers.py` | Local Transformers encoder for CLM | `TransformersEmbedder` |
 | `training/laya.py` | Prepare adaptation data, train, calibrate, infer | `prepare_finetune_data`, `train_laya_finetune` |
 | `evaluation/experiments.py` | Define feature combinations and comparison IDs | `experiment_catalog` |
@@ -23,7 +24,7 @@ registers the basic scan/extract commands and the full workflow commands from
 | `evaluation/clm.py` | Assemble CLM features for the shared evaluator | `prepare_clm_features` |
 | `evaluation/retrieval.py` | Rank candidates and score retrieval | `evaluate_retrieval` |
 | `evaluation/reporting.py`, `evaluation/qualitative.py` | Write prediction tables, confusion plots, and example reports | `prediction_frame`, `generate_qualitative_report` |
-| `evaluation/audit.py`, `evaluation/efficiency.py` | Check duplicate files and summarize timing | `audit_exact_duplicates`, `summarize_efficiency` |
+| `evaluation/audit.py`, `evaluation/efficiency.py` | Check duplicate files and summarize timing | `audit_exact_duplicates`, `exclude_label_conflicts`, `summarize_efficiency` |
 | `evaluation/pilot_classification.py`, `evaluation/pilot_retrieval.py` | Evaluators for the initial descriptor/JEV workflow | `evaluate_classification`, `evaluate_retrieval` |
 | `workflows/study.py` | Connect stages to `study-*` commands | `register_study_commands` |
 
@@ -42,25 +43,3 @@ and file identities, and `utils.py` provides file and hashing helpers.
    comparisons defined in `evaluation/experiments.py`.
 7. `evaluation/retrieval.py` uses the same feature blocks to rank candidates.
 8. Scripts in `analysis/` turn saved evaluation outputs into figures and tables.
-
-## Changes from the earlier layout
-
-The command names, experiment IDs, and question definitions are unchanged.
-Python imports now follow the package groups above. For example:
-
-```python
-from jev_tmcad.models.jev import run_jev_for_dataframe
-from jev_tmcad.evaluation.classification import prepare_features
-```
-
-| Earlier location | Current location |
-| --- | --- |
-| `research_v2/scripts/` | `analysis/scripts/` |
-| `research_v2/evaluation/`, `research_v2/evidence/` | `analysis/evaluation/`, `analysis/evidence/` |
-| `research_v2/study_analysis.yaml` | `configs/analysis.yaml` |
-| `research_v2/expert_review_app/` | `apps/expert_review/` |
-| `kaggle_laya/`, `kaggle_clm/` | `kaggle/laya/`, `kaggle/clm/` |
-
-The artifact helpers recognize these earlier directory names when reading an
-existing result bundle. For a new Kaggle run, rebuild the upload ZIP so it
-contains the current package layout.
