@@ -1,4 +1,0 @@
-scienceplots>=2.2
-Pillow>=10
-vtk>=9.2
-reportlab>=4

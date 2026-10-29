@@ -15,7 +15,6 @@ python run.py --config configs/study_full.yaml study-experiments
 | `study_full_ft_10epoch_kaggle.yaml` | Evaluation after importing the ten-epoch Kaggle Laya run |
 | `study_prompting.yaml` | Matched zero-shot/four-shot Jev acquisition and fusion |
 | `study_clm.yaml` | The CLM extension, including checkpoint and encoder settings |
-| `analysis.yaml` | Analysis of the recorded full study, writing to `analysis/evaluation/` |
 | `study.yaml`, `study_compact.yaml` | Earlier subset runs, useful for smaller checks |
 | `questions.yaml` | The original question set |
 | `questions_compact.yaml` | The compact class Choice and Noul question set used by the full workflow |

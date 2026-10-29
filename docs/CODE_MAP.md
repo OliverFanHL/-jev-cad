@@ -42,4 +42,3 @@ and file identities, and `utils.py` provides file and hashing helpers.
 6. `evaluation/classification.py` aligns records by sample ID and runs the
    comparisons defined in `evaluation/experiments.py`.
 7. `evaluation/retrieval.py` uses the same feature blocks to rank candidates.
-8. Scripts in `analysis/` turn saved evaluation outputs into figures and tables.

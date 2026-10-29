@@ -1,5 +1,4 @@
-# CLM extension of the frozen full study. Source paths and evaluation settings
-# match configs/analysis.yaml; CLM outputs stay in their own tree.
+# CLM inference and evaluation on the shared cohort.
 project:
   seed: 42
 study:

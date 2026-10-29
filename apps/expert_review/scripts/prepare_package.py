@@ -9,15 +9,12 @@ import argparse
 import csv
 import hashlib
 import json
-import sys
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 
 APP = Path(__file__).resolve().parents[1]
 REPO = APP.parents[1]
-ANALYSIS = REPO / "analysis"
 ANNOTATIONS = REPO / "outputs/study/full/annotations"
-sys.path.insert(0, str(ANALYSIS / "scripts"))
 
 
 def sha256(path: Path) -> str:
@@ -61,7 +58,7 @@ def render_one(item: tuple[str, str]) -> tuple[str, str | None]:
     variants = [("", (.95, -.80, .70)), ("_B", (-.85, -.90, .95))]
     try:
         from PIL import Image, ImageChops
-        from render_step_candidates import load_poly, render
+        from rendering import load_poly, render
 
         pending = [(suffix, direction) for suffix, direction in variants
                    if not (APP / "public/renders" / f"{sample_id}{suffix}.webp").exists()]

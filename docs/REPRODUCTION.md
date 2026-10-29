@@ -1,12 +1,12 @@
 # Running the workflow
 
-Run these commands from the repository root with Python 3.10–3.12.
+Run these commands from the repository root with Python 3.10â€“3.12.
 Start with the [README](../README.md) for installation.
 
 ```text
-STEP files → descriptors → frozen cohort → surface embeddings
-                       └→ model responses ─┬→ classification
-                                          └→ retrieval + relevance grades
+STEP files â†’ descriptors â†’ frozen cohort â†’ surface embeddings
+                       â””â†’ model responses â”€â”¬â†’ classification
+                                          â””â†’ retrieval + relevance grades
 ```
 
 Each stage saves its output for the next one. Paths and model settings are in
@@ -134,9 +134,6 @@ are adjudicated, place the exported CSVs in the configured annotation directory:
 python run.py --config configs/study_full_ft.yaml study-grade-finalize
 python run.py --config configs/study_full_ft.yaml study-evaluate
 ```
-
-The [analysis guide](../analysis/README.md) covers figures and automatic
-silhouette comparisons.
 
 ## 7. Compare matched prompts
 

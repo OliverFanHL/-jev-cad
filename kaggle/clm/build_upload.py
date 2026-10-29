@@ -11,8 +11,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 HERE = Path(__file__).resolve().parent
 PREFIX = "jev_tmcad_clm/"
-BASELINE_METHODS = ("descriptor_plus_geometry", "jev_direct_choice",
-                    "jev_all_questions", "geometry_plus_jev", "laya_ft_direct_choice")
 
 
 def digest(data: bytes) -> str:
@@ -52,18 +50,11 @@ def main() -> Path:
         "data/geometry_encoder.pt": "outputs/study/full/geometry_encoder.pt",
         "config/questions_compact.yaml": "configs/questions_compact.yaml",
         "config/study_clm.yaml": "kaggle/clm/study_clm_vllm.yaml",
-        "baseline/evaluation/classification/summary.json": "analysis/evaluation/classification/summary.json",
-        "baseline/evaluation/classification/source_manifest.csv": "analysis/evaluation/classification/source_manifest.csv",
         "baseline/duplicate_audit.json": "outputs/study/full/evaluation/duplicate_audit.json",
-        "baseline/qualitative_examples.json": "analysis/evidence/qualitative_examples.json",
     }.items():
         add(name, ROOT / relative)
-    for method in BASELINE_METHODS:
-        add(f"baseline/evaluation/classification/{method}.csv",
-            ROOT / f"analysis/evaluation/classification/{method}.csv")
     for source in sorted((ROOT / "src/jev_tmcad").rglob("*.py")):
         add(f"code/src/jev_tmcad/{source.relative_to(ROOT / 'src/jev_tmcad').as_posix()}", source)
-    add("code/build_clm_evidence.py", ROOT / "analysis/scripts/build_clm_evidence.py")
     manifest = {
         "bundle_type": "jev_tmcad_clm_v1", "cohort_hash": cohort_hash,
         "n_samples": len(rows),

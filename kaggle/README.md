@@ -43,7 +43,7 @@ command for the imported run.
 
 ## CLM inference
 
-With the baseline features and evaluation outputs available:
+With the shared cohort, descriptors, surface features, and duplicate audit available:
 
 ```bash
 python kaggle/clm/build_upload.py
@@ -64,7 +64,7 @@ The default destination is `outputs/study/clm/kaggle_import/`.
 
 ## Updating the notebooks
 
-The checked-in notebooks are generated from the Python builders beside them:
+Generate the notebooks from their Python builders:
 
 ```bash
 python kaggle/laya/create_notebook.py

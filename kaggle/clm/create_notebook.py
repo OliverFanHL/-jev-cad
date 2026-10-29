@@ -306,15 +306,6 @@ After acquisition completes, the registered evaluator runs classification with v
     methods = evaluate_classification(readout, output / 'evaluation/classification',
                                       c_grid=[float(x) for x in config['classification']['c_grid']])
     print('Classification methods:', list(methods))
-    evidence_module = bundle / 'code/build_clm_evidence.py'
-    import importlib.util
-    spec = importlib.util.spec_from_file_location('build_clm_evidence', evidence_module)
-    evidence = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(evidence)
-    evidence.build(output / 'evaluation', bundle / 'baseline/evaluation', output / 'evidence',
-                   cohort_path=bundle / 'data/cohort.csv',
-                   audit_path=bundle / 'baseline/duplicate_audit.json',
-                   cases_path=bundle / 'baseline/qualitative_examples.json')
     judgments = list(inputs.rglob('judged_pairs.csv'))
     if judgments:
         if len(judgments) != 1 or not judgments[0].with_suffix('.meta.json').exists():
@@ -333,7 +324,6 @@ else:
     'CLM results for the frozen TMCAD cohort.\\n'
     'clm_results.jsonl and .meta.json: resumable per-sample Choice/Noul outputs.\\n'
     'evaluation/classification: registered metrics, test predictions and confusion figures after full coverage.\\n'
-    'evidence: matched table, class recall, paired outcomes and duplicate sensitivity.\\n'
     'evaluation/experiments/retrieval: only when finalized expert grades are attached.\\n'
     'Attach this ZIP as a private Dataset to resume if clm_results.meta.json reports pending > 0.\\n',
     encoding='utf-8')
